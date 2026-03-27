@@ -76,21 +76,18 @@
     display: block !important;
   }
 
-  aside, header, nav, button, .no-print {
+  aside, header, nav, button, .no-print, main {
     display: none !important;
-  }
-
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-    background-color: white !important;
   }
 
   .print-only {
     display: block !important;
     position: static !important;
     left: auto !important;
+    opacity: 1 !important;
+    z-index: 1 !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
   }
 
   .page-break {

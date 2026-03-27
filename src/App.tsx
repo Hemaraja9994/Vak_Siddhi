@@ -2173,6 +2173,24 @@ export default function App() {
           onChange={e => setFdaObservations({...fdaObservations, naturalness: e.target.value})}
         />
       </Card>
+
+      <div className="pt-8 border-t border-slate-200">
+        <Card className="bg-slate-900 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="text-xl font-black tracking-tight">Generate Comprehensive Report</h3>
+              <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
+            </div>
+            <button 
+              onClick={handlePrint}
+              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3"
+            >
+              <Printer size={24} /> Print Report
+            </button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 
@@ -2812,6 +2830,24 @@ export default function App() {
           </Card>
         </div>
 
+        <div className="mt-12 pt-8 border-t border-slate-200">
+          <Card className="bg-slate-900 text-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h3 className="text-xl font-black tracking-tight">Generate Comprehensive Report</h3>
+                <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
+              </div>
+              <button 
+                onClick={handlePrint}
+                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3"
+              >
+                <Printer size={24} /> Print Report
+              </button>
+            </div>
+          </Card>
+        </div>
+
         <div className="mt-12 pt-8 border-t border-slate-200 text-center">
           <p className="text-[11px] text-slate-400 italic leading-relaxed">
             Developed and designed by <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span>, (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
@@ -3038,6 +3074,24 @@ export default function App() {
             </Card>
           );
         })}
+      </div>
+
+      <div className="pt-8 border-t border-slate-200">
+        <Card className="bg-slate-900 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="text-xl font-black tracking-tight">Generate Comprehensive Report</h3>
+              <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
+            </div>
+            <button 
+              onClick={handlePrint}
+              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3"
+            >
+              <Printer size={24} /> Print Report
+            </button>
+          </div>
+        </Card>
       </div>
     </div>
   );
@@ -3277,6 +3331,53 @@ export default function App() {
           </div>
         </div>
 
+        {/* Articulation Assessment (PCC) */}
+        <div className="mb-8 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Articulation Assessment (PCC)</h3>
+          {(() => {
+            let correct = 0;
+            let total = 0;
+            let incorrect = 0;
+            let distorted = 0;
+
+            Object.entries(articulationData).forEach(([phoneme, positions]) => {
+              if (CONSONANTS.includes(phoneme)) {
+                Object.values(positions).forEach(status => {
+                  if (status !== ArticulationStatus.NotTested) {
+                    total++;
+                    if (status === ArticulationStatus.Correct) correct++;
+                    else if (status === ArticulationStatus.Incorrect) incorrect++;
+                    else if (status === ArticulationStatus.Distorted) distorted++;
+                  }
+                });
+              }
+            });
+
+            const pccValue = total > 0 ? (correct / total) * 100 : 0;
+            
+            return (
+              <div className="grid grid-cols-4 gap-4">
+                <div className="p-4 bg-indigo-600 text-white rounded-xl text-center">
+                  <p className="text-[8px] font-bold uppercase opacity-70 mb-1">PCC Score</p>
+                  <p className="text-2xl font-black">{pccValue.toFixed(1)}%</p>
+                </div>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">Correct</p>
+                  <p className="text-xl font-black text-slate-900">{correct}</p>
+                </div>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">Incorrect</p>
+                  <p className="text-xl font-black text-slate-900">{incorrect}</p>
+                </div>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">Distorted</p>
+                  <p className="text-xl font-black text-slate-900">{distorted}</p>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
         {/* Detailed Subsystem Assessment */}
         <div className="mb-8 page-break">
           <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Detailed Subsystem Assessment</h3>
@@ -3474,28 +3575,28 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="md:col-span-2 bg-indigo-900 text-white flex flex-col justify-between shadow-xl shadow-indigo-200">
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-indigo-500 rounded-lg">
-                    <Activity size={16} />
+                  <div className="p-1.5 bg-indigo-500 rounded-lg shadow-lg shadow-indigo-500/20">
+                    <Activity size={16} className="text-white" />
                   </div>
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-indigo-300">Provisional Diagnosis</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-200">Provisional Diagnosis</h4>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <select 
                     value={manualDiagnosis}
                     onChange={(e) => setManualDiagnosis(e.target.value)}
-                    className="bg-indigo-800 text-[10px] font-bold border border-indigo-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                    className="bg-indigo-800/80 text-[10px] font-bold border border-indigo-700 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer min-w-[110px]"
                   >
-                    <option value="">Auto-Detect</option>
+                    <option value="">Auto-Detect Type</option>
                     {DYSARTHRIA_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                   <select 
                     value={manualSeverity}
                     onChange={(e) => setManualSeverity(e.target.value)}
-                    className="bg-indigo-800 text-[10px] font-bold border border-indigo-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                    className="bg-indigo-800/80 text-[10px] font-bold border border-indigo-700 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer min-w-[110px]"
                   >
-                    <option value="">Auto-Detect</option>
+                    <option value="">Auto-Detect Severity</option>
                     {SEVERITY_LEVELS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -3811,7 +3912,7 @@ export default function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-slate-50/50 relative">
+      <main className="flex-1 overflow-y-auto bg-slate-50/50 relative no-print">
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
@@ -3845,10 +3946,11 @@ export default function App() {
             </button>
             <button 
               onClick={handlePrint}
-              className="p-2 lg:p-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+              className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm font-bold text-xs lg:text-sm"
               title="Print Report"
             >
               <Printer size={16} className="lg:w-[18px] lg:h-[18px]" />
+              <span className="hidden sm:inline">Print Report</span>
             </button>
           </div>
         </header>
@@ -3967,8 +4069,8 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </div>
-        {renderPrintReport()}
       </main>
+      {renderPrintReport()}
     </div>
     </ErrorBoundary>
   );
