@@ -1,0 +1,7 @@
+{
+  "name": "VakSiddhi: Motor Speech Assessment Suite",
+  "description": "A professional assessment suite for motor speech disorders, integrating FDA-2, DDK rates, and AI-powered speech analysis for SLPs. Supports regional Indian languages and standardized clinical reporting.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

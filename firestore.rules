@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: /users/{userId}/records/{recordId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required, min 2, max 100)
+    //   - age: string (required, numeric string)
+    //   - gender: string (required, enum: male, female, other)
+    //   - clinician: string
+    //   - date: string (ISO date)
+    //   - neurologicalDiagnosis: string
+    //   - fdaData: map (0-4 scores)
+    //   - fdaObservations: map (strings)
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidRecord(data) {
+      return data.keys().hasAll(['id', 'name', 'age', 'gender']) &&
+             data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+             data.age is string && data.age.matches('^[0-9]{1,3}$') &&
+             data.gender in ['male', 'female', 'other', ''] &&
+             (!('clinician' in data) || data.clinician is string) &&
+             (!('date' in data) || data.date is string) &&
+             (!('neurologicalDiagnosis' in data) || data.neurologicalDiagnosis is string);
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /records/{recordId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidRecord(request.resource.data);
+        allow update: if isOwner(userId) && isValidRecord(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
