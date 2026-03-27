@@ -39,7 +39,8 @@ import {
   TrendingUp,
   Users,
   Calendar,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Share2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -2498,6 +2499,16 @@ export default function App() {
     );
   };
 
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleShare = () => {
+    const shareUrl = 'https://bit.ly/Vaksiddhi';
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  };
+
   const renderDashboard = () => {
     if (!user) {
       return (
@@ -2848,7 +2859,26 @@ export default function App() {
           </Card>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 text-center">
+        <div className="mt-12 pt-8 border-t border-slate-200 text-center flex flex-col items-center gap-4">
+          <button 
+            onClick={handleShare}
+            className={cn(
+              "px-6 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+              isCopied 
+                ? "bg-green-500 text-white shadow-lg shadow-green-100" 
+                : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100"
+            )}
+          >
+            {isCopied ? (
+              <>
+                <CheckCircle2 size={14} /> Link Copied!
+              </>
+            ) : (
+              <>
+                <Share2 size={14} /> Share App Link
+              </>
+            )}
+          </button>
           <p className="text-[11px] text-slate-400 italic leading-relaxed">
             Developed and designed by <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span>, (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
           </p>
@@ -3184,6 +3214,25 @@ export default function App() {
           <div className="pt-4 flex flex-col gap-4 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Version 1.2.0 (Clinical Beta)</p>
+              <button 
+                onClick={handleShare}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                  isCopied 
+                    ? "bg-green-500 text-white shadow-lg shadow-green-100" 
+                    : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100"
+                )}
+              >
+                {isCopied ? (
+                  <>
+                    <CheckCircle2 size={12} /> Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={12} /> Share App Link
+                  </>
+                )}
+              </button>
             </div>
             <p className="text-[10px] text-slate-400 italic leading-relaxed">
               Developed and designed by <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span>, (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
@@ -3901,6 +3950,25 @@ export default function App() {
               Clinical Assessment Tool
             </p>
             <div className="mt-4 pt-4 border-t border-slate-100">
+              <button 
+                onClick={handleShare}
+                className={cn(
+                  "w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all mb-4",
+                  isCopied 
+                    ? "bg-green-500 text-white shadow-lg shadow-green-100" 
+                    : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100"
+                )}
+              >
+                {isCopied ? (
+                  <>
+                    <CheckCircle2 size={12} /> Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={12} /> Share App
+                  </>
+                )}
+              </button>
               <p className="text-[9px] text-slate-400 text-center leading-relaxed italic">
                 Developed and designed by<br/>
                 <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span><br/>
