@@ -63,8 +63,8 @@ import {
   Cell,
   Legend
 } from 'recharts';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 import { GoogleGenAI, Type as GenAIType } from "@google/genai";
 import { 
@@ -226,8 +226,9 @@ export default function App() {
       return;
     }
 
-    // Capture original styles to restore later
+    // Capture original state to restore later
     const originalStyle = element.getAttribute('style') || '';
+    const originalClassName = element.className;
     
     try {
       console.log('Starting PDF generation...');
@@ -236,8 +237,9 @@ export default function App() {
       const originalScrollY = window.scrollY;
       window.scrollTo(0, 0);
       
-      // Temporarily make it visible and styled for capture
-      // Using fixed positioning at top:0 ensures it's in the viewport for html2canvas
+      // Temporarily remove print-only class and make it visible and styled for capture
+      element.className = originalClassName.replace('print-only', '').trim();
+      
       element.style.display = 'block';
       element.style.position = 'fixed';
       element.style.top = '0';
@@ -253,27 +255,57 @@ export default function App() {
       element.style.pointerEvents = 'auto';
       
       // Wait for any charts/images/fonts to render completely
-      await new Promise(resolve => setTimeout(resolve, 3500));
+      await new Promise(resolve => setTimeout(resolve, 4000));
 
-      const opt = {
-        margin: [10, 10, 10, 10] as [number, number, number, number],
-        filename: `VakSiddhi_Assessment_Report_${patientInfo.name || 'Patient'}_${new Date().toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          logging: true,
-          windowWidth: 800,
-          scrollY: 0,
-          scrollX: 0,
-          backgroundColor: '#ffffff'
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-      };
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        windowWidth: 800,
+        scrollY: 0,
+        scrollX: 0,
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc: Document) => {
+          const clonedElement = clonedDoc.getElementById('print-report-container');
+          if (clonedElement) {
+            clonedElement.style.display = 'block';
+            clonedElement.style.visibility = 'visible';
+            clonedElement.style.opacity = '1';
+            clonedElement.style.position = 'relative';
+            clonedElement.style.top = '0';
+            clonedElement.style.left = '0';
+            clonedElement.style.width = '800px';
+          }
+        }
+      });
 
-      // Use the worker API for more robust generation
-      const worker = html2pdf().from(element).set(opt);
-      await worker.save();
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      let heightLeft = pdfHeight;
+      let position = 0;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`VakSiddhi_Assessment_Report_${patientInfo.name || 'Patient'}_${new Date().toISOString().split('T')[0]}.pdf`);
       
       console.log('PDF generated successfully');
       
@@ -284,7 +316,8 @@ export default function App() {
       alert('Automatic download failed. Opening print dialog as fallback.');
       window.print();
     } finally {
-      // Restore original styles
+      // Restore original state
+      element.className = originalClassName;
       element.setAttribute('style', originalStyle);
       setIsDownloading(false);
     }
@@ -3434,7 +3467,7 @@ export default function App() {
     const diagnosis = getDiagnosis();
 
     return (
-      <div ref={reportRef} className="print-only bg-white p-12 font-sans text-slate-900" style={{ width: '800px', margin: '0 auto' }}>
+      <div id="print-report-container" ref={reportRef} className="print-only bg-white p-12 font-sans text-slate-900" style={{ width: '800px', margin: '0 auto' }}>
         {/* Professional Medical Header */}
         <div className="flex justify-between items-start border-b-4 border-indigo-600 pb-8 mb-10">
           <div className="flex items-center gap-5">
