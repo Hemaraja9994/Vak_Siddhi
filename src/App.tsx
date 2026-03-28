@@ -232,13 +232,18 @@ export default function App() {
     try {
       console.log('Starting PDF generation...');
       
+      // Ensure we are at the top of the page for capture to avoid scroll-related blank pages
+      const originalScrollY = window.scrollY;
+      window.scrollTo(0, 0);
+      
       // Temporarily make it visible and styled for capture
+      // Using fixed positioning at top:0 ensures it's in the viewport for html2canvas
       element.style.display = 'block';
-      element.style.position = 'absolute';
+      element.style.position = 'fixed';
       element.style.top = '0';
       element.style.left = '0';
       element.style.width = '800px'; 
-      element.style.zIndex = '99999';
+      element.style.zIndex = '999999';
       element.style.backgroundColor = 'white';
       element.style.colorScheme = 'light';
       element.style.visibility = 'visible';
@@ -258,16 +263,22 @@ export default function App() {
           scale: 2, 
           useCORS: true, 
           logging: true,
-          letterRendering: true,
           windowWidth: 800,
           scrollY: 0,
-          scrollX: 0
+          scrollX: 0,
+          backgroundColor: '#ffffff'
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
       };
 
-      await html2pdf().from(element).set(opt).save();
+      // Use the worker API for more robust generation
+      const worker = html2pdf().from(element).set(opt);
+      await worker.save();
+      
       console.log('PDF generated successfully');
+      
+      // Restore scroll
+      window.scrollTo(0, originalScrollY);
     } catch (error) {
       console.error('PDF Generation Error:', error);
       alert('Automatic download failed. Opening print dialog as fallback.');
@@ -3427,7 +3438,7 @@ export default function App() {
         {/* Professional Medical Header */}
         <div className="flex justify-between items-start border-b-4 border-indigo-600 pb-8 mb-10">
           <div className="flex items-center gap-5">
-            <div className="p-4 bg-indigo-600 rounded-2xl text-white shadow-lg">
+            <div className="p-4 bg-indigo-600 rounded-2xl text-white">
               <Volume2 size={48} />
             </div>
             <div>
@@ -3483,15 +3494,15 @@ export default function App() {
         {/* Diagnostic Conclusion Section */}
         <div className="mb-12 page-break">
           <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b-2 border-slate-900 pb-3 mb-6">Diagnostic Conclusion</h3>
-          <div className="p-10 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm relative overflow-hidden">
+          <div className="p-10 bg-slate-50 rounded-3xl border-2 border-slate-100 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-100 rounded-full -mr-32 -mt-32" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
               <div>
                 <p className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-3">Provisional Diagnosis</p>
                 <h2 className="text-5xl font-black text-slate-900 leading-tight mb-4 tracking-tighter">{diagnosis.type}</h2>
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white rounded-2xl text-sm font-black text-indigo-700 uppercase tracking-widest border-2 border-indigo-100 shadow-sm">
+                <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white rounded-2xl text-sm font-black text-indigo-700 uppercase tracking-widest border-2 border-indigo-100">
                   <div className={cn(
-                    "w-3 h-3 rounded-full shadow-sm",
+                    "w-3 h-3 rounded-full",
                     diagnosis.severity === "Profound" ? "bg-red-500" :
                     diagnosis.severity === "Severe" ? "bg-orange-500" :
                     diagnosis.severity === "Moderate" ? "bg-amber-500" : "bg-emerald-500"
@@ -3519,7 +3530,7 @@ export default function App() {
             <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Subsystem Radar Profile</h3>
             <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full">Visual Diagnostic Profile</span>
           </div>
-          <div className="flex flex-col items-center bg-slate-50 p-12 rounded-[40px] border-2 border-slate-100 shadow-inner">
+          <div className="flex flex-col items-center bg-slate-50 p-12 rounded-[40px] border-2 border-slate-100">
             <div className="w-full flex justify-center mb-12" style={{ minHeight: '500px' }}>
               <RadarChart 
                 width={700} 
@@ -3545,7 +3556,7 @@ export default function App() {
             </div>
             <div className="w-full grid grid-cols-4 gap-4">
               {radarData.map(d => (
-                <div key={d.subject} className="text-center p-5 bg-white rounded-3xl border-2 border-slate-100 shadow-sm">
+                <div key={d.subject} className="text-center p-5 bg-white rounded-3xl border-2 border-slate-100">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{d.subject}</p>
                   <p className="text-2xl font-black text-slate-900 leading-none">{d.A.toFixed(1)}</p>
                   <div className="w-full h-1 bg-slate-100 rounded-full mt-3 overflow-hidden">
@@ -3563,7 +3574,7 @@ export default function App() {
           <div className="grid grid-cols-1 gap-8">
             {/* Transcription Block */}
             {aiResult && aiResult.transcription && (
-              <div className="p-10 bg-indigo-900 text-white rounded-[40px] shadow-xl relative overflow-hidden">
+              <div className="p-10 bg-indigo-900 text-white rounded-[40px] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                   <Volume2 size={120} />
                 </div>
@@ -3596,7 +3607,7 @@ export default function App() {
                 });
                 const pccValue = total > 0 ? (correct / total) * 100 : 0;
                 return (
-                  <div className="p-8 bg-emerald-50 border-2 border-emerald-100 rounded-[32px] text-center shadow-sm">
+                  <div className="p-8 bg-emerald-50 border-2 border-emerald-100 rounded-[32px] text-center">
                     <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">PCC Score</p>
                     <div className="relative inline-flex items-center justify-center mb-4">
                       <span className="text-5xl font-black text-emerald-900 tracking-tighter">{pccValue.toFixed(0)}%</span>
@@ -3607,7 +3618,7 @@ export default function App() {
               })()}
 
               {/* GRBAS Profile Card */}
-              <div className="p-8 bg-indigo-50 border-2 border-indigo-100 rounded-[32px] shadow-sm">
+              <div className="p-8 bg-indigo-50 border-2 border-indigo-100 rounded-[32px]">
                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4">Voice Quality (GRBAS)</p>
                 <div className="grid grid-cols-5 gap-2">
                   {Object.entries(grbasData).map(([key, value]) => (
@@ -3621,7 +3632,7 @@ export default function App() {
               </div>
 
               {/* Acoustic Summary Card */}
-              <div className="p-8 bg-slate-50 border-2 border-slate-100 rounded-[32px] shadow-sm">
+              <div className="p-8 bg-slate-50 border-2 border-slate-100 rounded-[32px]">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">AI Analysis Summary</p>
                 <p className="text-xs text-slate-700 leading-relaxed font-medium">
                   {typeof aiResult === 'string' ? aiResult : (aiResult?.summary || "Acoustic analysis reveals characteristic patterns of motor speech instability. Temporal and spectral markers indicate subsystem-specific deficits consistent with clinical observations.")}
@@ -3633,7 +3644,7 @@ export default function App() {
             {aiResult && aiResult.metrics && (
               <div className="grid grid-cols-4 gap-6">
                 {Object.entries(aiResult.metrics).map(([key, value]: [string, any]) => (
-                  <div key={key} className="p-6 bg-white border-2 border-slate-50 rounded-3xl text-center shadow-sm hover:border-indigo-100 transition-colors">
+                  <div key={key} className="p-6 bg-white border-2 border-slate-50 rounded-3xl text-center transition-colors">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">{key.replace(/_/g, ' ')}</p>
                     <p className="text-xl font-black text-indigo-900">{value}</p>
                   </div>
@@ -3646,7 +3657,7 @@ export default function App() {
         {/* Clinical Summary & Narrative */}
         <div className="mb-12 page-break">
           <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-3 mb-6">Clinical Summary & Diagnostic Reasoning</h3>
-          <div className="p-10 bg-white border-2 border-indigo-50 rounded-3xl leading-relaxed text-sm text-slate-700 space-y-6 shadow-sm relative">
+          <div className="p-10 bg-white border-2 border-indigo-50 rounded-3xl leading-relaxed text-sm text-slate-700 space-y-6 relative">
             <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-full" />
             <p className="font-medium">
               Comprehensive motor speech assessment reveals a <span className="font-black text-indigo-900 underline decoration-indigo-200 underline-offset-4">{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</span> profile. 
@@ -3673,7 +3684,7 @@ export default function App() {
           <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-3 mb-6">Detailed Subsystem Analysis</h3>
           <div className="space-y-8">
             {Object.entries(fdaData).map(([subsystem, scores]) => (
-              <div key={subsystem} className="border-2 border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+              <div key={subsystem} className="border-2 border-slate-100 rounded-3xl overflow-hidden">
                 <div className="bg-slate-50 px-6 py-3 border-b-2 border-slate-100 flex justify-between items-center">
                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{subsystem}</h4>
                   <div className="flex items-center gap-2">
@@ -3767,7 +3778,7 @@ export default function App() {
           <div className="grid grid-cols-2 gap-8">
             {Object.entries(treatmentGoals.subsystems).map(([subsystem, goals]) => (
               (goals.shortTerm.length > 0 || goals.longTerm.length > 0) && (
-                <div key={subsystem} className="p-6 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm">
+                <div key={subsystem} className="p-6 bg-slate-50 rounded-3xl border-2 border-slate-100">
                   <h4 className="text-sm font-black text-indigo-900 uppercase tracking-widest mb-4 border-b-2 border-indigo-100 pb-2">{subsystem}</h4>
                   <div className="space-y-5">
                     {goals.shortTerm.length > 0 && (
