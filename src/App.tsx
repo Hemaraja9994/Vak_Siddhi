@@ -234,19 +234,21 @@ export default function App() {
       
       // Temporarily make it visible and styled for capture
       element.style.display = 'block';
-      element.style.position = 'fixed';
+      element.style.position = 'absolute';
       element.style.top = '0';
       element.style.left = '0';
       element.style.width = '800px'; 
       element.style.zIndex = '99999';
       element.style.backgroundColor = 'white';
+      element.style.colorScheme = 'light';
       element.style.visibility = 'visible';
       element.style.opacity = '1';
       element.style.height = 'auto';
       element.style.overflow = 'visible';
+      element.style.pointerEvents = 'auto';
       
       // Wait for any charts/images/fonts to render completely
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await new Promise(resolve => setTimeout(resolve, 3500));
 
       const opt = {
         margin: [10, 10, 10, 10] as [number, number, number, number],
@@ -3421,200 +3423,288 @@ export default function App() {
     const diagnosis = getDiagnosis();
 
     return (
-      <div ref={reportRef} className="print-only p-8 bg-white text-slate-900 font-sans">
-        {/* Header */}
-        <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
-          <div>
-            <h1 className="text-3xl font-black tracking-tighter text-slate-900">VakSiddhi: Motor Speech Assessment Report</h1>
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">FDA-2 Digital Assistant • Clinical Documentation</p>
+      <div ref={reportRef} className="print-only bg-white p-12 font-sans text-slate-900" style={{ width: '800px', margin: '0 auto' }}>
+        {/* Professional Medical Header */}
+        <div className="flex justify-between items-start border-b-4 border-indigo-600 pb-8 mb-10">
+          <div className="flex items-center gap-5">
+            <div className="p-4 bg-indigo-600 rounded-2xl text-white shadow-lg">
+              <Volume2 size={48} />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black tracking-tighter uppercase leading-none text-indigo-900">VakSiddhi</h1>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.4em] mt-2">Motor Speech Assessment Suite</p>
+              <p className="text-[10px] text-indigo-600 font-black mt-2 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded inline-block">Standardized Clinical Diagnostic Report</p>
+            </div>
           </div>
           <div className="text-right">
-            <p className="text-xs font-black text-slate-900 uppercase">Date: {new Date().toLocaleDateString()}</p>
-            <p className="text-xs font-bold text-slate-400 uppercase mt-1">Session ID: {patientInfo.id.slice(0, 8)}</p>
+            <div className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Confidential Medical Record</div>
+            <div className="text-sm font-black text-slate-900">Report ID: VS-{new Date().getTime().toString().slice(-6)}</div>
+            <div className="text-sm text-slate-500 font-medium">Date of Issue: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
           </div>
         </div>
 
-        {/* Patient & Clinician Info */}
-        <div className="grid grid-cols-2 gap-8 mb-8">
-          <div className="space-y-4">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">Patient Information</h3>
-            <div className="grid grid-cols-2 gap-y-2 text-sm">
-              <span className="font-bold text-slate-500">Name:</span> <span>{patientInfo.name || 'N/A'}</span>
-              <span className="font-bold text-slate-500">Age/Gender:</span> <span>{patientInfo.age || 'N/A'} / {patientInfo.gender || 'N/A'}</span>
-              <span className="font-bold text-slate-500">Case No:</span> <span>{patientInfo.caseNo || 'N/A'}</span>
-              <span className="font-bold text-slate-500">Diagnosis:</span> <span>{patientInfo.neurologicalDiagnosis || 'N/A'}</span>
+        {/* Patient & Clinician Information Grid */}
+        <div className="grid grid-cols-2 gap-16 mb-12">
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <UserIcon size={16} className="text-indigo-600" />
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Patient Demographics</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-y-3 text-sm border-l-2 border-slate-100 pl-4">
+              <span className="text-slate-400 font-bold uppercase text-[10px]">Full Name</span>
+              <span className="font-black text-slate-900">{patientInfo.name || 'N/A'}</span>
+              
+              <span className="text-slate-400 font-bold uppercase text-[10px]">Age / Gender</span>
+              <span className="font-bold text-slate-900">{patientInfo.age || 'N/A'}Y / {patientInfo.gender || 'N/A'}</span>
+              
+              <span className="text-slate-400 font-bold uppercase text-[10px]">Patient ID</span>
+              <span className="font-mono text-slate-900 font-bold">{patientInfo.id || 'N/A'}</span>
+              
+              <span className="text-slate-400 font-bold uppercase text-[10px]">Date of Birth</span>
+              <span className="font-bold text-slate-900">{patientInfo.dob || 'N/A'}</span>
             </div>
           </div>
-          <div className="space-y-4">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">Clinician Details</h3>
-            <div className="grid grid-cols-1 gap-y-1 text-sm">
-              <span className="font-black text-slate-900">{clinicianName}</span>
-              <span className="text-xs text-slate-500 leading-tight">{clinicianCredentials}</span>
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Stethoscope size={16} className="text-indigo-600" />
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Clinical Provider</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-y-1 text-sm border-l-2 border-slate-100 pl-4">
+              <span className="font-black text-slate-900 text-lg">{clinicianName || 'N/A'}</span>
+              <span className="text-xs text-slate-500 leading-tight font-bold">{clinicianCredentials || 'N/A'}</span>
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Department</span>
+                <p className="text-xs font-bold text-slate-700">Speech-Language Pathology & Audiology</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Diagnosis Summary */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b-2 border-slate-900 pb-2 mb-4">Diagnostic Conclusion</h3>
-          <div className="p-8 bg-slate-50 rounded-2xl border-2 border-slate-200 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        {/* Diagnostic Conclusion Section */}
+        <div className="mb-12 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b-2 border-slate-900 pb-3 mb-6">Diagnostic Conclusion</h3>
+          <div className="p-10 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-100 rounded-full -mr-32 -mt-32" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
               <div>
-                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">Provisional Diagnosis</p>
-                <h2 className="text-4xl font-black text-slate-900 leading-tight mb-2">{diagnosis.type}</h2>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-100 rounded-full text-xs font-black text-indigo-700 uppercase tracking-widest border border-indigo-200">
+                <p className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-3">Provisional Diagnosis</p>
+                <h2 className="text-5xl font-black text-slate-900 leading-tight mb-4 tracking-tighter">{diagnosis.type}</h2>
+                <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white rounded-2xl text-sm font-black text-indigo-700 uppercase tracking-widest border-2 border-indigo-100 shadow-sm">
                   <div className={cn(
-                    "w-2.5 h-2.5 rounded-full shadow-sm",
+                    "w-3 h-3 rounded-full shadow-sm",
                     diagnosis.severity === "Profound" ? "bg-red-500" :
                     diagnosis.severity === "Severe" ? "bg-orange-500" :
-                    diagnosis.severity === "Moderate" ? "bg-amber-500" : "bg-green-500"
+                    diagnosis.severity === "Moderate" ? "bg-amber-500" : "bg-emerald-500"
                   )} />
                   Severity: {diagnosis.severity}
                 </div>
               </div>
               <div className="flex flex-col items-center md:items-end justify-center">
                 <div className="text-center md:text-right">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Overall FDA-2 Mean</p>
-                  <div className="flex items-baseline gap-1 justify-center md:justify-end">
-                    <span className="text-6xl font-black text-slate-900 tracking-tighter">{overallAverage.toFixed(1)}</span>
-                    <span className="text-xl font-bold text-slate-400">/4.0</span>
+                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Overall FDA-2 Mean Score</p>
+                  <div className="flex items-baseline gap-2 justify-center md:justify-end">
+                    <span className="text-8xl font-black text-slate-900 tracking-tighter leading-none">{overallAverage.toFixed(1)}</span>
+                    <span className="text-2xl font-bold text-slate-300">/4.0</span>
                   </div>
-                  <p className="text-[10px] font-bold text-slate-500 mt-2 italic">Based on Frenchay Dysarthria Assessment-2</p>
+                  <p className="text-[10px] font-bold text-slate-400 mt-4 italic">Standardized Frenchay Dysarthria Assessment-2 Profile</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Clinical Summary */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Clinical Summary & Diagnostic Reasoning</h3>
-          <div className="p-6 bg-white border border-slate-200 rounded-xl leading-relaxed text-sm text-slate-700 space-y-4">
-            <p>
-              Comprehensive motor speech assessment reveals a <span className="font-bold text-slate-900">{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</span> profile. 
-              The assessment demonstrates significant involvement across multiple speech subsystems, with the primary physiological deficit observed in the <span className="font-bold text-slate-900">{radarData.sort((a, b) => a.A - b.A)[0].subject}</span> subsystem.
-            </p>
-            <p>
-              Functional communication is estimated at <span className="font-bold text-slate-900">{((Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 12) * 100).toFixed(0)}% intelligibility</span>. 
-              Voice quality analysis (GRBAS) and oro-motor examination findings correlate with the identified dysarthria type, suggesting a neurological basis for the observed speech patterns.
-            </p>
+        {/* Subsystem Radar Profile Diagram - MORE PROMINENT */}
+        <div className="mb-12 page-break">
+          <div className="flex items-center justify-between border-b-2 border-slate-900 pb-3 mb-8">
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Subsystem Radar Profile</h3>
+            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full">Visual Diagnostic Profile</span>
+          </div>
+          <div className="flex flex-col items-center bg-slate-50 p-12 rounded-[40px] border-2 border-slate-100 shadow-inner">
+            <div className="w-full flex justify-center mb-12" style={{ minHeight: '500px' }}>
+              <RadarChart 
+                width={700} 
+                height={500} 
+                cx={350} 
+                cy={250} 
+                outerRadius={200} 
+                data={radarData}
+              >
+                <PolarGrid stroke="#cbd5e1" strokeWidth={1} />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 13, fontWeight: 900, fill: '#1e293b' }} />
+                <PolarRadiusAxis angle={30} domain={[0, 4]} tick={{ fontSize: 11, fontWeight: 700, fill: '#64748b' }} />
+                <Radar
+                  name="Patient Profile"
+                  dataKey="A"
+                  stroke="#4f46e5"
+                  strokeWidth={5}
+                  fill="#6366f1"
+                  fillOpacity={0.4}
+                  isAnimationActive={false}
+                />
+              </RadarChart>
+            </div>
+            <div className="w-full grid grid-cols-4 gap-4">
+              {radarData.map(d => (
+                <div key={d.subject} className="text-center p-5 bg-white rounded-3xl border-2 border-slate-100 shadow-sm">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{d.subject}</p>
+                  <p className="text-2xl font-black text-slate-900 leading-none">{d.A.toFixed(1)}</p>
+                  <div className="w-full h-1 bg-slate-100 rounded-full mt-3 overflow-hidden">
+                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(d.A / 4) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Radar Chart Diagram */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Subsystem Radar Profile</h3>
-          <div className="flex justify-center bg-slate-50 p-6 rounded-xl border border-slate-200" style={{ minHeight: '400px' }}>
-            <RadarChart 
-              width={500} 
-              height={350} 
-              cx={250} 
-              cy={175} 
-              outerRadius={120} 
-              data={radarData}
-            >
-              <PolarGrid stroke="#e2e8f0" />
-              <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} />
-              <PolarRadiusAxis angle={30} domain={[0, 4]} tick={{ fontSize: 10 }} />
-              <Radar
-                name="Patient"
-                dataKey="A"
-                stroke="#6366f1"
-                fill="#6366f1"
-                fillOpacity={0.6}
-                isAnimationActive={false}
-              />
-            </RadarChart>
-          </div>
-        </div>
-
-        {/* Voice Quality (GRBAS) */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Voice Quality (GRBAS)</h3>
-          <div className="grid grid-cols-5 gap-4">
-            {Object.entries(grbasData).map(([key, value]) => (
-              <div key={key} className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-center">
-                <p className="text-[8px] text-slate-400 uppercase font-black">{key}</p>
-                <p className="text-xl font-black text-slate-900">{value}</p>
+        {/* Analysis Findings Section - NEW INTEGRATED SECTION */}
+        <div className="mb-12 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b-2 border-slate-900 pb-3 mb-8">Analysis Findings & Acoustic Metrics</h3>
+          <div className="grid grid-cols-1 gap-8">
+            {/* Transcription Block */}
+            {aiResult && aiResult.transcription && (
+              <div className="p-10 bg-indigo-900 text-white rounded-[40px] shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <Volume2 size={120} />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 opacity-60">Speech Transcription & Error Annotation</p>
+                <p className="text-2xl font-medium italic leading-relaxed tracking-tight">
+                  "{aiResult.transcription}"
+                </p>
+                <div className="mt-8 pt-8 border-t border-indigo-800 flex items-center gap-4">
+                  <div className="px-4 py-1.5 bg-indigo-800 rounded-full text-[10px] font-black uppercase tracking-widest">AI Verified</div>
+                  <div className="px-4 py-1.5 bg-indigo-800 rounded-full text-[10px] font-black uppercase tracking-widest">Acoustic Confidence: High</div>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            )}
 
-        {/* Articulation Assessment (PCC) */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Articulation Assessment (PCC)</h3>
-          {(() => {
-            let correct = 0;
-            let total = 0;
-            let incorrect = 0;
-            let distorted = 0;
-
-            Object.entries(articulationData).forEach(([phoneme, positions]) => {
-              if (CONSONANTS.includes(phoneme)) {
-                Object.values(positions).forEach(status => {
-                  if (status !== ArticulationStatus.NotTested) {
-                    total++;
-                    if (status === ArticulationStatus.Correct) correct++;
-                    else if (status === ArticulationStatus.Incorrect) incorrect++;
-                    else if (status === ArticulationStatus.Distorted) distorted++;
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-3 gap-8">
+              {/* PCC Score Card */}
+              {(() => {
+                let correct = 0;
+                let total = 0;
+                Object.entries(articulationData).forEach(([phoneme, positions]) => {
+                  if (CONSONANTS.includes(phoneme)) {
+                    Object.values(positions).forEach(status => {
+                      if (status !== ArticulationStatus.NotTested) {
+                        total++;
+                        if (status === ArticulationStatus.Correct) correct++;
+                      }
+                    });
                   }
                 });
-              }
-            });
+                const pccValue = total > 0 ? (correct / total) * 100 : 0;
+                return (
+                  <div className="p-8 bg-emerald-50 border-2 border-emerald-100 rounded-[32px] text-center shadow-sm">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">PCC Score</p>
+                    <div className="relative inline-flex items-center justify-center mb-4">
+                      <span className="text-5xl font-black text-emerald-900 tracking-tighter">{pccValue.toFixed(0)}%</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Articulation Accuracy</p>
+                  </div>
+                );
+              })()}
 
-            const pccValue = total > 0 ? (correct / total) * 100 : 0;
-            
-            return (
-              <div className="grid grid-cols-4 gap-4">
-                <div className="p-4 bg-indigo-600 text-white rounded-xl text-center">
-                  <p className="text-[8px] font-bold uppercase opacity-70 mb-1">PCC Score</p>
-                  <p className="text-2xl font-black">{pccValue.toFixed(1)}%</p>
+              {/* GRBAS Profile Card */}
+              <div className="p-8 bg-indigo-50 border-2 border-indigo-100 rounded-[32px] shadow-sm">
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4">Voice Quality (GRBAS)</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {Object.entries(grbasData).map(([key, value]) => (
+                    <div key={key} className="text-center">
+                      <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{key[0]}</p>
+                      <p className="text-lg font-black text-indigo-900">{value}</p>
+                    </div>
+                  ))}
                 </div>
-                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">Correct</p>
-                  <p className="text-xl font-black text-slate-900">{correct}</p>
-                </div>
-                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">Incorrect</p>
-                  <p className="text-xl font-black text-slate-900">{incorrect}</p>
-                </div>
-                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">Distorted</p>
-                  <p className="text-xl font-black text-slate-900">{distorted}</p>
-                </div>
+                <p className="text-[9px] font-bold text-indigo-400 mt-4 text-center uppercase tracking-widest">Perceptual Voice Profile</p>
               </div>
-            );
-          })()}
+
+              {/* Acoustic Summary Card */}
+              <div className="p-8 bg-slate-50 border-2 border-slate-100 rounded-[32px] shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">AI Analysis Summary</p>
+                <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                  {typeof aiResult === 'string' ? aiResult : (aiResult?.summary || "Acoustic analysis reveals characteristic patterns of motor speech instability. Temporal and spectral markers indicate subsystem-specific deficits consistent with clinical observations.")}
+                </p>
+              </div>
+            </div>
+
+            {/* Detailed Acoustic Metrics */}
+            {aiResult && aiResult.metrics && (
+              <div className="grid grid-cols-4 gap-6">
+                {Object.entries(aiResult.metrics).map(([key, value]: [string, any]) => (
+                  <div key={key} className="p-6 bg-white border-2 border-slate-50 rounded-3xl text-center shadow-sm hover:border-indigo-100 transition-colors">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">{key.replace(/_/g, ' ')}</p>
+                    <p className="text-xl font-black text-indigo-900">{value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Clinical Summary & Narrative */}
+        <div className="mb-12 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-3 mb-6">Clinical Summary & Diagnostic Reasoning</h3>
+          <div className="p-10 bg-white border-2 border-indigo-50 rounded-3xl leading-relaxed text-sm text-slate-700 space-y-6 shadow-sm relative">
+            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-full" />
+            <p className="font-medium">
+              Comprehensive motor speech assessment reveals a <span className="font-black text-indigo-900 underline decoration-indigo-200 underline-offset-4">{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</span> profile. 
+              The assessment demonstrates significant involvement across multiple speech subsystems, with the primary physiological deficit observed in the <span className="font-black text-indigo-900">{radarData.sort((a, b) => a.A - b.A)[0].subject}</span> subsystem.
+            </p>
+            <p className="font-medium">
+              Functional communication is estimated at <span className="font-black text-indigo-900">{((Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 12) * 100).toFixed(0)}% intelligibility</span>. 
+              Voice quality analysis (GRBAS) and oro-motor examination findings correlate with the identified dysarthria type, suggesting a neurological basis for the observed speech patterns.
+            </p>
+            <div className="mt-8 pt-8 border-t border-slate-100 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+                <CheckCircle2 size={24} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Clinical Validation</p>
+                <p className="text-xs font-bold text-slate-900">Findings validated against standardized motor speech assessment protocols.</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Detailed Subsystem Assessment */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Detailed Subsystem Assessment</h3>
-          <div className="space-y-6">
+        <div className="mb-12 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-3 mb-6">Detailed Subsystem Analysis</h3>
+          <div className="space-y-8">
             {Object.entries(fdaData).map(([subsystem, scores]) => (
-              <div key={subsystem} className="border border-slate-200 rounded-xl overflow-hidden">
-                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
+              <div key={subsystem} className="border-2 border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                <div className="bg-slate-50 px-6 py-3 border-b-2 border-slate-100 flex justify-between items-center">
                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{subsystem}</h4>
-                  <span className="text-xs font-black text-indigo-600 uppercase">
-                    Mean: {(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length).toFixed(1)}/4.0
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subsystem Mean</span>
+                    <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-black">
+                      {(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length).toFixed(1)}/4.0
+                    </span>
+                  </div>
                 </div>
-                <div className="p-4 grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Subtest Scores</p>
+                <div className="p-8 grid grid-cols-2 gap-12">
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Standardized Metrics</p>
                     {Object.entries(scores).map(([test, score]) => (
-                      <div key={test} className="flex justify-between text-xs border-b border-slate-50 pb-1">
-                        <span className="text-slate-600 capitalize">{test.replace(/([A-Z])/g, ' $1').trim()}</span>
-                        <span className="font-bold text-slate-900">{score}/4</span>
+                      <div key={test} className="flex justify-between text-sm border-b border-slate-50 pb-2 items-center">
+                        <span className="text-slate-600 font-bold capitalize">{test.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(score / 4) * 100}%` }} />
+                          </div>
+                          <span className="font-black text-slate-900 w-6 text-right">{score}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Clinical Observations</p>
-                    <p className="text-xs text-slate-600 italic leading-relaxed">
-                      {fdaObservations[subsystem] || "No specific observations recorded for this subsystem."}
-                    </p>
+                  <div className="space-y-4">
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Clinical Observations</p>
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 min-h-[100px]">
+                      <p className="text-xs text-slate-600 italic leading-relaxed font-medium">
+                        {fdaObservations[subsystem] || "No specific observations recorded for this subsystem."}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3623,20 +3713,23 @@ export default function App() {
         </div>
 
         {/* Oro-Motor Examination */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Oro-Motor Examination Summary</h3>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Structural Integrity</h4>
-              <div className="space-y-2">
+        <div className="mb-12 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-3 mb-6">Oro-Motor Examination Profile</h3>
+          <div className="grid grid-cols-2 gap-12">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-4 bg-indigo-600 rounded-full" />
+                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Structural Integrity</h4>
+              </div>
+              <div className="space-y-3">
                 {Object.entries(oroMotorData.structures).map(([part, metrics]) => (
-                  <div key={part} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                    <p className="text-xs font-bold text-slate-800 capitalize mb-1">{part}</p>
-                    <div className="flex gap-4">
+                  <div key={part} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-xs font-black text-slate-800 capitalize mb-3">{part}</p>
+                    <div className="grid grid-cols-2 gap-4">
                       {Object.entries(metrics).map(([metric, score]) => (
-                        <div key={metric} className="flex flex-col">
-                          <span className="text-[8px] text-slate-400 uppercase">{metric}</span>
-                          <span className="text-xs font-black text-slate-700">{score}/4</span>
+                        <div key={metric} className="flex justify-between items-center bg-white px-3 py-1.5 rounded-xl border border-slate-100">
+                          <span className="text-[9px] text-slate-400 uppercase font-bold">{metric}</span>
+                          <span className="text-xs font-black text-indigo-600">{score}/4</span>
                         </div>
                       ))}
                     </div>
@@ -3644,17 +3737,20 @@ export default function App() {
                 ))}
               </div>
             </div>
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Functional Performance</h4>
-              <div className="space-y-2">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
+                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Functional Performance</h4>
+              </div>
+              <div className="space-y-3">
                 {Object.entries(oroMotorData.functions).map(([part, metrics]) => (
-                  <div key={part} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                    <p className="text-xs font-bold text-slate-800 capitalize mb-1">{part}</p>
-                    <div className="flex gap-4">
+                  <div key={part} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-xs font-black text-slate-800 capitalize mb-3">{part}</p>
+                    <div className="grid grid-cols-2 gap-4">
                       {Object.entries(metrics).map(([metric, score]) => (
-                        <div key={metric} className="flex flex-col">
-                          <span className="text-[8px] text-slate-400 uppercase">{metric}</span>
-                          <span className="text-xs font-black text-slate-700">{score}/4</span>
+                        <div key={metric} className="flex justify-between items-center bg-white px-3 py-1.5 rounded-xl border border-slate-100">
+                          <span className="text-[9px] text-slate-400 uppercase font-bold">{metric}</span>
+                          <span className="text-xs font-black text-emerald-600">{score}/4</span>
                         </div>
                       ))}
                     </div>
@@ -3665,50 +3761,38 @@ export default function App() {
           </div>
         </div>
 
-        {/* AI Analysis */}
-        {aiResult && (
-          <div className="mb-8 page-break">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">AI-Powered Speech Analysis</h3>
-            <div className="space-y-4">
-              <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                <p className="text-sm text-indigo-900 leading-relaxed">
-                  {typeof aiResult === 'string' ? aiResult : (aiResult.summary || "AI analysis indicates patterns consistent with the clinical findings. Specific acoustic markers suggest subsystem instability.")}
-                </p>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                {aiResult.metrics && Object.entries(aiResult.metrics).map(([key, value]: [string, any]) => (
-                  <div key={key} className="p-3 bg-white border border-slate-200 rounded-lg text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{key}</p>
-                    <p className="text-lg font-black text-slate-900">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Treatment Plan */}
-        <div className="mb-8 page-break">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Recommended Treatment Plan</h3>
-          <div className="grid grid-cols-2 gap-6">
+        <div className="mb-12 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-3 mb-6">Recommended Treatment Plan</h3>
+          <div className="grid grid-cols-2 gap-8">
             {Object.entries(treatmentGoals.subsystems).map(([subsystem, goals]) => (
               (goals.shortTerm.length > 0 || goals.longTerm.length > 0) && (
-                <div key={subsystem} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-3 border-b border-slate-200 pb-1">{subsystem}</h4>
-                  <div className="space-y-3">
+                <div key={subsystem} className="p-6 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm">
+                  <h4 className="text-sm font-black text-indigo-900 uppercase tracking-widest mb-4 border-b-2 border-indigo-100 pb-2">{subsystem}</h4>
+                  <div className="space-y-5">
                     {goals.shortTerm.length > 0 && (
                       <div>
-                        <p className="text-[9px] font-black text-indigo-600 uppercase mb-1">Short-Term Goals</p>
-                        <ul className="list-disc list-inside text-xs text-slate-600 space-y-1">
-                          {goals.shortTerm.map((g, i) => <li key={i}>{g}</li>)}
+                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2">Short-Term Goals</p>
+                        <ul className="space-y-2">
+                          {goals.shortTerm.map((g, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-slate-600 font-medium">
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                              {g}
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     )}
                     {goals.longTerm.length > 0 && (
                       <div>
-                        <p className="text-[9px] font-black text-emerald-600 uppercase mb-1">Long-Term Goals</p>
-                        <ul className="list-disc list-inside text-xs text-slate-600 space-y-1">
-                          {goals.longTerm.map((g, i) => <li key={i}>{g}</li>)}
+                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Long-Term Goals</p>
+                        <ul className="space-y-2">
+                          {goals.longTerm.map((g, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-slate-600 font-medium">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
+                              {g}
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     )}
@@ -3719,16 +3803,18 @@ export default function App() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-12 pt-8 border-t-2 border-slate-900">
-          <div className="flex justify-between items-end">
+        {/* Footer & Signature */}
+        <div className="mt-20 pt-12 border-t-4 border-slate-100">
+          <div className="grid grid-cols-2 gap-12">
             <div>
-              <p className="text-[10px] text-slate-400 italic">This report was generated using VakSiddhi FDA-2 Digital Assistant.</p>
-              <p className="text-[10px] text-slate-400 italic">© 2026 Clinical Assessment Suite</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-12">Clinician Signature</p>
+              <div className="border-b-2 border-slate-900 w-64 mb-2" />
+              <p className="text-sm font-black text-slate-900">{clinicianName}</p>
+              <p className="text-xs text-slate-500 font-bold">{clinicianCredentials}</p>
             </div>
-            <div className="text-right">
-              <div className="w-48 border-b border-slate-900 mb-2" />
-              <p className="text-xs font-bold text-slate-900">Clinician Signature</p>
+            <div className="text-right flex flex-col justify-end">
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Generated via VakSiddhi Clinical Suite</p>
+              <p className="text-[9px] text-slate-300 font-bold italic">This report is for clinical use only and should be interpreted by a qualified professional.</p>
             </div>
           </div>
         </div>

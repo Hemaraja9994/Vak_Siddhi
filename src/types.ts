@@ -21,6 +21,7 @@ export interface PatientInfo {
   id: string; // Unique ID for storage
   name: string;
   age: string;
+  dob?: string;
   gender: string;
   caseNo: string;
   clinician: string;
