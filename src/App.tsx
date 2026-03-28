@@ -41,7 +41,9 @@ import {
   Calendar,
   PieChart as PieChartIcon,
   Share2,
-  Download
+  Download,
+  Quote,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -215,6 +217,10 @@ export default function App() {
   const [isDownloading, setIsDownloading] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleDownloadPDF = async () => {
     if (isDownloading || !reportRef.current) return;
     setIsDownloading(true);
@@ -240,7 +246,7 @@ export default function App() {
       element.style.position = 'absolute';
       element.style.top = '0';
       element.style.left = '0';
-      element.style.width = '850px'; 
+      element.style.width = '1000px'; // Increased width for better resolution
       element.style.height = 'auto';
       element.style.minHeight = 'auto';
       element.style.zIndex = '9999999';
@@ -252,15 +258,15 @@ export default function App() {
       element.style.pointerEvents = 'none'; // Prevent interaction during capture
       
       // Wait for any charts/images/fonts to render completely
-      await new Promise(resolve => setTimeout(resolve, 6000));
+      await new Promise(resolve => setTimeout(resolve, 8000)); // Increased wait time
 
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 2, // High resolution
         useCORS: true,
         logging: false,
         allowTaint: true,
-        width: 850,
-        windowWidth: 850,
+        width: 1000,
+        windowWidth: 1000,
         height: element.scrollHeight,
         windowHeight: element.scrollHeight,
         scrollY: 0,
@@ -275,13 +281,15 @@ export default function App() {
             clonedElement.style.position = 'relative';
             clonedElement.style.top = '0';
             clonedElement.style.left = '0';
-            clonedElement.style.width = '850px';
+            clonedElement.style.width = '1000px';
             clonedElement.style.height = 'auto';
+            clonedElement.style.margin = '0';
+            clonedElement.style.padding = '80px'; // Match p-20 (80px)
           }
         }
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const imgData = canvas.toDataURL('image/jpeg', 0.92); // Slightly lower quality for better reliability
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -290,26 +298,30 @@ export default function App() {
       });
 
       const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate dimensions to fit with 10mm margins
+      const margin = 10;
+      const pdfWidth = pageWidth - (margin * 2);
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
       let heightLeft = pdfHeight;
-      let position = 0;
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      let position = margin; // Start at top margin
 
       // First page
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
+      pdf.addImage(imgData, 'JPEG', margin, position, pdfWidth, pdfHeight, undefined, 'FAST');
+      heightLeft -= (pageHeight - margin * 2);
 
       // Subsequent pages
       while (heightLeft > 0) {
-        position = heightLeft - pdfHeight;
+        position = margin - (pdfHeight - heightLeft);
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, 'JPEG', margin, position, pdfWidth, pdfHeight, undefined, 'FAST');
+        heightLeft -= (pageHeight - margin * 2);
       }
 
-      pdf.save(`VakSiddhi_Report_${patientInfo.name || 'Patient'}_${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`VakSiddhi_Clinical_Report_${patientInfo.name || 'Patient'}_${new Date().toISOString().split('T')[0]}.pdf`);
       
       // Restore scroll
       window.scrollTo(0, originalScrollY);
@@ -2298,18 +2310,27 @@ export default function App() {
               <h3 className="text-xl font-black tracking-tight">Generate Comprehensive Report</h3>
               <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
             </div>
-            <button 
-              onClick={handleDownloadPDF}
-              disabled={isDownloading}
-              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isDownloading ? (
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              <button 
+                onClick={handlePrint}
+                className="w-full md:w-auto px-8 py-4 bg-white/10 text-white font-black rounded-2xl hover:bg-white/20 transition-all border border-white/20 flex items-center justify-center gap-3"
+              >
                 <Printer size={24} />
-              )}
-              {isDownloading ? 'Generating PDF...' : 'Download Report'}
-            </button>
+                Print Report
+              </button>
+              <button 
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDownloading ? (
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Download size={24} />
+                )}
+                {isDownloading ? 'Generating PDF...' : 'Download Report'}
+              </button>
+            </div>
           </div>
         </Card>
       </div>
@@ -2970,18 +2991,27 @@ export default function App() {
                 <h3 className="text-xl font-black tracking-tight">Generate Comprehensive Report</h3>
                 <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
               </div>
-              <button 
-                onClick={handleDownloadPDF}
-                disabled={isDownloading}
-                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isDownloading ? (
-                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
+              <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                <button 
+                  onClick={handlePrint}
+                  className="w-full md:w-auto px-8 py-4 bg-white/10 text-white font-black rounded-2xl hover:bg-white/20 transition-all border border-white/20 flex items-center justify-center gap-3"
+                >
                   <Printer size={24} />
-                )}
-                {isDownloading ? 'Generating PDF...' : 'Download Report'}
-              </button>
+                  Print Report
+                </button>
+                <button 
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDownloading ? (
+                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Download size={24} />
+                  )}
+                  {isDownloading ? 'Generating PDF...' : 'Download Report'}
+                </button>
+              </div>
             </div>
           </Card>
         </div>
@@ -3254,18 +3284,27 @@ export default function App() {
               <h3 className="text-xl font-black tracking-tight">Generate Comprehensive Report</h3>
               <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
             </div>
-            <button 
-              onClick={handleDownloadPDF}
-              disabled={isDownloading}
-              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isDownloading ? (
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Download size={24} />
-              )}
-              {isDownloading ? 'Generating Report...' : 'Download PDF Report'}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              <button 
+                onClick={handlePrint}
+                className="w-full md:w-auto px-8 py-4 bg-white/10 text-white font-black rounded-2xl hover:bg-white/20 transition-all border border-white/20 flex items-center justify-center gap-3"
+              >
+                <Printer size={24} />
+                Print Report
+              </button>
+              <button 
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDownloading ? (
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Download size={24} />
+                )}
+                {isDownloading ? 'Generating Report...' : 'Download PDF Report'}
+              </button>
+            </div>
           </div>
         </Card>
 
@@ -3307,6 +3346,7 @@ export default function App() {
       </div>
     </div>
   );
+};
 
   const renderSettings = () => (
     <div className="space-y-8">
@@ -3417,384 +3457,13 @@ export default function App() {
               </button>
             </div>
             <p className="text-[10px] text-slate-400 italic leading-relaxed">
-              Developed and designed by <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span>, (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
+              Developed and designed by <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span>, (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Pathology)
             </p>
           </div>
         </div>
       </Card>
     </div>
   );
-
-  const handlePrint = () => {
-    handleDownloadPDF();
-  };
-
-  const renderPrintReport = () => {
-    const radarData = [
-      { subject: 'Reflex', A: Object.values(fdaData.reflex).reduce((a, b) => a + b, 0) / 3, fullMark: 4 },
-      { subject: 'Respiration', A: Object.values(fdaData.respiration).reduce((a, b) => a + b, 0) / 2, fullMark: 4 },
-      { subject: 'Lips', A: Object.values(fdaData.lips).reduce((a, b) => a + b, 0) / 5, fullMark: 4 },
-      { subject: 'Jaw', A: Object.values(fdaData.jaw).reduce((a, b) => a + b, 0) / 2, fullMark: 4 },
-      { subject: 'Palate', A: Object.values(fdaData.palate).reduce((a, b) => a + b, 0) / 3, fullMark: 4 },
-      { subject: 'Laryngeal', A: Object.values(fdaData.laryngeal).reduce((a, b) => a + b, 0) / 4, fullMark: 4 },
-      { subject: 'Tongue', A: Object.values(fdaData.tongue).reduce((a, b) => a + b, 0) / 6, fullMark: 4 },
-      { subject: 'Intelligibility', A: Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 3, fullMark: 4 },
-    ];
-
-    const overallAverage = radarData.reduce((acc, curr) => acc + curr.A, 0) / radarData.length;
-    const lowestSubsystem = [...radarData].sort((a, b) => a.A - b.A)[0];
-
-    const getDiagnosis = () => {
-      const scores = radarData.reduce((acc, curr) => ({ ...acc, [curr.subject.toLowerCase()]: curr.A }), {} as Record<string, number>);
-      let type = manualDiagnosis || "Undetermined Dysarthria";
-      let severity = manualSeverity || "Mild";
-      
-      if (!manualSeverity) {
-        if (overallAverage < 1) severity = "Profound";
-        else if (overallAverage < 2) severity = "Severe";
-        else if (overallAverage < 3) severity = "Moderate";
-        else if (overallAverage < 3.8) severity = "Mild";
-        else severity = "Normal/Subclinical";
-      }
-
-      if (!manualDiagnosis) {
-        if (scores.respiration < 2 && scores.laryngeal < 2 && scores.tongue < 2) type = "Flaccid Dysarthria";
-        else if (scores.laryngeal < 2 && scores.intelligibility < 2 && scores.respiration > 3) type = "Spastic Dysarthria";
-        else if (scores.intelligibility < 2 && scores.respiration < 3 && scores.laryngeal > 3) type = "Ataxic Dysarthria";
-        else if (scores.jaw < 2 && scores.tongue < 2) type = "Hypokinetic Dysarthria";
-        else if (scores.laryngeal < 2 && scores.intelligibility < 2) type = "Hyperkinetic Dysarthria";
-      }
-      return { type, severity };
-    };
-
-    const diagnosis = getDiagnosis();
-
-    return (
-      <div id="print-report-container" ref={reportRef} className="print-only bg-white p-10 font-sans text-slate-900" style={{ width: '850px', margin: '0 auto' }}>
-        {/* Medical Header */}
-        <div className="flex justify-between items-center border-b-2 border-slate-800 pb-6 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-slate-800 rounded-lg text-white">
-              <Volume2 size={32} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">VAKSIDDHI</h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Motor Speech Assessment Suite</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <h2 className="text-lg font-bold text-slate-900 uppercase">Clinical Assessment Report</h2>
-            <p className="text-xs text-slate-500">Generated on {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-          </div>
-        </div>
-
-        {/* Demographics & Clinician Info */}
-        <div className="grid grid-cols-2 gap-8 mb-8">
-          <div className="border border-slate-200 p-5 rounded-xl">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Patient Information</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-[9px] text-slate-400 uppercase font-bold">Name</p>
-                <p className="font-bold">{patientInfo.name || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-[9px] text-slate-400 uppercase font-bold">Age / Gender</p>
-                <p className="font-bold">{patientInfo.age || 'N/A'}Y / {patientInfo.gender || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-[9px] text-slate-400 uppercase font-bold">Patient ID</p>
-                <p className="font-mono text-xs">{patientInfo.id || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-[9px] text-slate-400 uppercase font-bold">Date of Birth</p>
-                <p className="font-bold">{patientInfo.dob || 'N/A'}</p>
-              </div>
-            </div>
-          </div>
-          <div className="border border-slate-200 p-5 rounded-xl">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Clinician Information</h3>
-            <div className="text-sm space-y-3">
-              <div>
-                <p className="text-[9px] text-slate-400 uppercase font-bold">Assessed By</p>
-                <p className="font-bold text-base">{clinicianName || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-[9px] text-slate-400 uppercase font-bold">Credentials</p>
-                <p className="text-xs text-slate-600">{clinicianCredentials || 'N/A'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Diagnostic Summary Card */}
-        <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-8 mb-8">
-          <div className="grid grid-cols-2 gap-8 items-center">
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Provisional Diagnosis</p>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">{diagnosis.type}</h2>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm">
-                <div className={cn(
-                  "w-2.5 h-2.5 rounded-full",
-                  diagnosis.severity === "Profound" ? "bg-red-500" :
-                  diagnosis.severity === "Severe" ? "bg-orange-500" :
-                  diagnosis.severity === "Moderate" ? "bg-amber-500" : "bg-emerald-500"
-                )} />
-                <span className="text-xs font-bold uppercase tracking-wide">Severity: {diagnosis.severity}</span>
-              </div>
-            </div>
-            <div className="text-right border-l border-slate-200 pl-8">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">FDA-2 Overall Mean Score</p>
-              <div className="flex items-baseline justify-end gap-1">
-                <span className="text-6xl font-bold text-slate-900">{overallAverage.toFixed(1)}</span>
-                <span className="text-xl text-slate-400 font-bold">/ 4.0</span>
-              </div>
-              <p className="text-[9px] text-slate-400 font-bold uppercase mt-2">Standardized Frenchay Profile</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Radar Profile & Subsystem Scores */}
-        <div className="mb-8 page-break">
-          <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-300 pb-2 mb-6">Subsystem Analysis Profile</h3>
-          <div className="flex flex-col items-center bg-white border border-slate-100 rounded-2xl p-6">
-            <div className="relative w-full flex justify-center">
-              <RadarChart width={600} height={400} cx={300} cy={200} outerRadius={150} data={radarData}>
-                <PolarGrid stroke="#e2e8f0" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fontWeight: 700, fill: '#475569' }} />
-                <PolarRadiusAxis angle={30} domain={[0, 4]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                <Radar
-                  name="Patient"
-                  dataKey="A"
-                  stroke="#1e293b"
-                  strokeWidth={3}
-                  fill="#334155"
-                  fillOpacity={0.2}
-                  isAnimationActive={false}
-                  dot={(props: any) => {
-                    const { cx, cy, payload } = props;
-                    const isMin = payload.subject === lowestSubsystem.subject;
-                    return (
-                      <circle 
-                        cx={cx} 
-                        cy={cy} 
-                        r={isMin ? 6 : 4} 
-                        fill={isMin ? "#ef4444" : "#1e293b"} 
-                        stroke="#fff" 
-                        strokeWidth={2} 
-                      />
-                    );
-                  }}
-                />
-              </RadarChart>
-              <div className="absolute top-0 right-0 p-4 bg-red-50 border border-red-100 rounded-lg">
-                <p className="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1">Primary Deficit</p>
-                <p className="text-sm font-bold text-red-900">{lowestSubsystem.subject}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-4 w-full mt-6">
-              {radarData.map(d => (
-                <div key={d.subject} className={cn(
-                  "text-center p-3 border rounded-xl transition-all",
-                  d.subject === lowestSubsystem.subject ? "bg-red-50 border-red-200 ring-2 ring-red-100" : "bg-white border-slate-100"
-                )}>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">{d.subject}</p>
-                  <p className={cn(
-                    "text-lg font-bold",
-                    d.subject === lowestSubsystem.subject ? "text-red-600" : "text-slate-900"
-                  )}>{d.A.toFixed(1)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Analysis Findings */}
-        <div className="mb-8 page-break">
-          <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-300 pb-2 mb-6">Acoustic Analysis & Transcription</h3>
-          <div className="space-y-6">
-            {aiResult && aiResult.transcription && (
-              <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl italic text-slate-700 text-lg leading-relaxed">
-                "{aiResult.transcription}"
-              </div>
-            )}
-            <div className="grid grid-cols-3 gap-6">
-              <div className="p-5 border border-slate-200 rounded-xl text-center">
-                <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">PCC Score</p>
-                {(() => {
-                  let correct = 0, total = 0;
-                  Object.entries(articulationData).forEach(([phoneme, positions]) => {
-                    if (CONSONANTS.includes(phoneme)) {
-                      Object.values(positions).forEach(status => {
-                        if (status !== ArticulationStatus.NotTested) {
-                          total++;
-                          if (status === ArticulationStatus.Correct) correct++;
-                        }
-                      });
-                    }
-                  });
-                  const pcc = total > 0 ? (correct / total) * 100 : 0;
-                  return <p className="text-3xl font-bold text-slate-900">{pcc.toFixed(0)}%</p>;
-                })()}
-                <p className="text-[8px] text-slate-400 uppercase font-bold mt-1">Articulation Accuracy</p>
-              </div>
-              <div className="p-5 border border-slate-200 rounded-xl">
-                <p className="text-[9px] font-bold text-slate-400 uppercase mb-3 text-center">Voice (GRBAS)</p>
-                <div className="flex justify-around">
-                  {Object.entries(grbasData).map(([k, v]) => (
-                    <div key={k} className="text-center">
-                      <p className="text-[8px] font-bold text-slate-400">{k[0]}</p>
-                      <p className="text-sm font-bold">{v}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="p-5 border border-slate-200 rounded-xl text-xs text-slate-600 leading-tight">
-                <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">AI Summary</p>
-                {typeof aiResult === 'string' ? aiResult : (aiResult?.summary || "Acoustic analysis complete.")}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Clinical Narrative */}
-        <div className="mb-8 page-break">
-          <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-300 pb-2 mb-4">Clinical Summary</h3>
-          <div className="p-6 border border-slate-200 rounded-xl text-sm text-slate-700 leading-relaxed space-y-4">
-            <p>
-              Assessment findings indicate a <strong>{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</strong>. 
-              The most significant deficit is noted in the <strong>{radarData.sort((a, b) => a.A - b.A)[0].subject}</strong> subsystem.
-            </p>
-            <p>
-              Functional speech intelligibility is estimated at <strong>{((Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 12) * 100).toFixed(0)}%</strong>. 
-              Clinical observations correlate with acoustic metrics and oro-motor findings.
-            </p>
-          </div>
-        </div>
-
-        {/* Detailed Subsystem Table */}
-        <div className="mb-8 page-break">
-          <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-300 pb-2 mb-6">Detailed Subsystem Metrics</h3>
-          <div className="space-y-6">
-            {Object.entries(fdaData).map(([subsystem, scores]) => (
-              <div key={subsystem} className="border border-slate-200 rounded-xl overflow-hidden">
-                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
-                  <h4 className="text-xs font-bold text-slate-700 uppercase">{subsystem}</h4>
-                  <span className="text-xs font-bold">Mean: {(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length).toFixed(1)} / 4.0</span>
-                </div>
-                <div className="p-4 grid grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    {Object.entries(scores).map(([test, score]) => (
-                      <div key={test} className="flex justify-between text-[11px] border-b border-slate-50 pb-1">
-                        <span className="text-slate-500 capitalize">{test.replace(/([A-Z])/g, ' $1').trim()}</span>
-                        <span className="font-bold">{score}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-[11px] text-slate-500 italic">
-                    <p className="font-bold text-[9px] uppercase mb-1 not-italic">Observations:</p>
-                    {fdaObservations[subsystem] || "None recorded."}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Oro-Motor Exam */}
-        <div className="mb-8 page-break">
-          <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-300 pb-2 mb-6">Oro-Motor Examination</h3>
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-3">Structural Integrity</h4>
-              <div className="space-y-3">
-                {Object.entries(oroMotorData.structures).map(([part, metrics]) => (
-                  <div key={part} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-700 capitalize mb-2">{part}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(metrics).map(([m, s]) => (
-                        <div key={m} className="flex justify-between text-[9px] bg-white p-1.5 rounded border border-slate-100">
-                          <span className="text-slate-400 uppercase">{m}</span>
-                          <span className="font-bold">{s}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-3">Functional Performance</h4>
-              <div className="space-y-3">
-                {Object.entries(oroMotorData.functions).map(([part, metrics]) => (
-                  <div key={part} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-700 capitalize mb-2">{part}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(metrics).map(([m, s]) => (
-                        <div key={m} className="flex justify-between text-[9px] bg-white p-1.5 rounded border border-slate-100">
-                          <span className="text-slate-400 uppercase">{m}</span>
-                          <span className="font-bold">{s}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Treatment Plan */}
-        <div className="mb-8 page-break">
-          <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-300 pb-2 mb-6">Recommended Treatment Plan</h3>
-          <div className="grid grid-cols-2 gap-6">
-            {Object.entries(treatmentGoals.subsystems).map(([subsystem, goals]) => (
-              (goals.shortTerm.length > 0 || goals.longTerm.length > 0) && (
-                <div key={subsystem} className="p-5 border border-slate-200 rounded-xl">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase mb-3 border-b border-slate-100 pb-1">{subsystem}</h4>
-                  <div className="space-y-4">
-                    {goals.shortTerm.length > 0 && (
-                      <div>
-                        <p className="text-[9px] font-bold text-indigo-600 uppercase mb-2">Short-Term Goals</p>
-                        <ul className="list-disc list-inside text-[11px] text-slate-600 space-y-1">
-                          {goals.shortTerm.map((g, i) => <li key={i}>{g}</li>)}
-                        </ul>
-                      </div>
-                    )}
-                    {goals.longTerm.length > 0 && (
-                      <div>
-                        <p className="text-[9px] font-bold text-emerald-600 uppercase mb-2">Long-Term Goals</p>
-                        <ul className="list-disc list-inside text-[11px] text-slate-600 space-y-1">
-                          {goals.longTerm.map((g, i) => <li key={i}>{g}</li>)}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            ))}
-          </div>
-        </div>
-
-        {/* Footer & Signature */}
-        <div className="mt-16 pt-8 border-t border-slate-300">
-          <div className="grid grid-cols-2 gap-12">
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-12">Clinician Signature</p>
-              <div className="border-b border-slate-900 w-full mb-2" />
-              <p className="text-base font-bold text-slate-900">{clinicianName}</p>
-              <p className="text-xs text-slate-500">{clinicianCredentials}</p>
-            </div>
-            <div className="text-right flex flex-col justify-end">
-              <p className="text-[9px] text-slate-400 uppercase font-bold">Generated via VakSiddhi Clinical Suite</p>
-              <p className="text-[8px] text-slate-300 italic mt-1">
-                This report is for professional clinical use only and should be interpreted by a qualified Speech-Language Pathologist.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const renderProfile = () => {
     const radarData = [
@@ -3924,7 +3593,14 @@ export default function App() {
                 <span className="text-[10px] font-bold text-indigo-400 uppercase">Overall FDA-2 Mean</span>
                 <span className="text-2xl font-black">{overallAverage.toFixed(1)}<span className="text-sm text-indigo-400">/4.0</span></span>
               </div>
-              <div className="text-right">
+              <div className="text-right flex items-center gap-4">
+                <button 
+                  onClick={handlePrint}
+                  className="px-4 py-2 bg-indigo-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2"
+                >
+                  <Printer size={14} />
+                  Print
+                </button>
                 <button 
                   onClick={handleDownloadPDF}
                   disabled={isDownloading}
@@ -4046,6 +3722,236 @@ export default function App() {
             </button>
           </div>
         </Card>
+      </div>
+    );
+  };
+
+  const renderPrintReport = () => {
+    const radarData = [
+      { subject: 'Reflex', A: Object.values(fdaData.reflex).reduce((a, b) => a + b, 0) / 3, fullMark: 4 },
+      { subject: 'Respiration', A: Object.values(fdaData.respiration).reduce((a, b) => a + b, 0) / 2, fullMark: 4 },
+      { subject: 'Lips', A: Object.values(fdaData.lips).reduce((a, b) => a + b, 0) / 5, fullMark: 4 },
+      { subject: 'Jaw', A: Object.values(fdaData.jaw).reduce((a, b) => a + b, 0) / 2, fullMark: 4 },
+      { subject: 'Palate', A: Object.values(fdaData.palate).reduce((a, b) => a + b, 0) / 3, fullMark: 4 },
+      { subject: 'Laryngeal', A: Object.values(fdaData.laryngeal).reduce((a, b) => a + b, 0) / 4, fullMark: 4 },
+      { subject: 'Tongue', A: Object.values(fdaData.tongue).reduce((a, b) => a + b, 0) / 6, fullMark: 4 },
+      { subject: 'Intelligibility', A: Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 3, fullMark: 4 },
+    ];
+
+    const overallAverage = radarData.reduce((acc, curr) => acc + curr.A, 0) / radarData.length;
+    const lowestSubsystem = [...radarData].sort((a, b) => a.A - b.A)[0];
+
+    const getDiagnosis = () => {
+      const scores = radarData.reduce((acc, curr) => ({ ...acc, [curr.subject.toLowerCase()]: curr.A }), {} as Record<string, number>);
+      let type = manualDiagnosis || "Undetermined Dysarthria";
+      let severity = manualSeverity || "Mild";
+      
+      if (!manualSeverity) {
+        if (overallAverage < 1) severity = "Profound";
+        else if (overallAverage < 2) severity = "Severe";
+        else if (overallAverage < 3) severity = "Moderate";
+        else if (overallAverage < 3.8) severity = "Mild";
+        else severity = "Normal/Subclinical";
+      }
+
+      if (!manualDiagnosis) {
+        if (scores.respiration < 2 && scores.laryngeal < 2 && scores.tongue < 2) type = "Flaccid Dysarthria";
+        else if (scores.laryngeal < 2 && scores.intelligibility < 2 && scores.respiration > 3) type = "Spastic Dysarthria";
+        else if (scores.intelligibility < 2 && scores.respiration < 3 && scores.laryngeal > 3) type = "Ataxic Dysarthria";
+        else if (scores.jaw < 2 && scores.tongue < 2) type = "Hypokinetic Dysarthria";
+        else if (scores.laryngeal < 2 && scores.intelligibility < 2) type = "Hyperkinetic Dysarthria";
+      }
+      return { type, severity };
+    };
+
+    const diagnosis = getDiagnosis();
+
+    return (
+      <div id="print-report-container" ref={reportRef} className="print-only bg-white p-12 font-sans text-slate-900" style={{ width: '1000px', margin: '0 auto' }}>
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-10 border-b-2 border-slate-900 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-slate-900 rounded text-white">
+              <Volume2 size={32} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">VAKSIDDHI MOTOR SPEECH ASSESSMENT SUITE</h1>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Clinical Diagnostic Report</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-bold text-slate-900">Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest">FDA-2 Standardized Protocol</p>
+          </div>
+        </div>
+
+        {/* Patient & Clinician Info */}
+        <div className="grid grid-cols-2 gap-10 mb-10">
+          <div className="border border-slate-200 p-6 rounded-lg">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Patient Details</h3>
+            <table className="w-full text-sm">
+              <tbody>
+                <tr>
+                  <td className="py-1 font-semibold text-slate-500 w-1/3">Name:</td>
+                  <td className="py-1 font-bold text-slate-900">{patientInfo.name || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 font-semibold text-slate-500">Age/Gender:</td>
+                  <td className="py-1 font-bold text-slate-900">{patientInfo.age || 'N/A'}Y / {patientInfo.gender || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 font-semibold text-slate-500">Patient ID:</td>
+                  <td className="py-1 font-mono text-slate-600">{patientInfo.id || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 font-semibold text-slate-500">Date of Birth:</td>
+                  <td className="py-1 font-bold text-slate-900">{patientInfo.dob || 'N/A'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="border border-slate-200 p-6 rounded-lg">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Clinician Details</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase">Assessing Clinician</p>
+                <p className="text-base font-bold text-slate-900">{clinicianName}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase">Qualifications</p>
+                <p className="text-xs text-slate-600 leading-relaxed">{clinicianCredentials}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Findings */}
+        <div className="bg-slate-50 p-8 rounded-lg border border-slate-200 mb-10">
+          <div className="grid grid-cols-3 gap-8">
+            <div className="col-span-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Provisional Diagnosis</p>
+              <h2 className="text-3xl font-bold text-slate-900">{diagnosis.type}</h2>
+              <p className="text-sm font-semibold text-slate-600 mt-1">Severity: <span className="text-slate-900">{diagnosis.severity}</span></p>
+            </div>
+            <div className="text-right border-l border-slate-200 pl-8">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">FDA-2 Mean Score</p>
+              <div className="flex items-baseline justify-end gap-1">
+                <span className="text-5xl font-bold text-slate-900">{overallAverage.toFixed(1)}</span>
+                <span className="text-xl text-slate-400">/ 4.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Radar Subsystem Profile */}
+        <div className="mb-10 page-break">
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Subsystem Analysis Profile</h3>
+          <div className="flex flex-col items-center bg-white border border-slate-200 rounded-lg p-8">
+            <div className="w-full h-[450px] flex justify-center items-center">
+              <RadarChart width={600} height={400} cx={300} cy={200} outerRadius={160} data={radarData}>
+                <PolarGrid stroke="#e2e8f0" />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fontWeight: 700, fill: '#475569' }} />
+                <PolarRadiusAxis angle={30} domain={[0, 4]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                <Radar
+                  name="Patient"
+                  dataKey="A"
+                  stroke="#1e293b"
+                  strokeWidth={2}
+                  fill="#1e293b"
+                  fillOpacity={0.15}
+                  isAnimationActive={false}
+                />
+              </RadarChart>
+            </div>
+            <div className="grid grid-cols-4 gap-4 w-full mt-6">
+              {radarData.map(d => (
+                <div key={d.subject} className="p-3 bg-slate-50 rounded border border-slate-100 text-center">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{d.subject}</p>
+                  <p className="text-lg font-bold text-slate-900">{d.A.toFixed(1)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Acoustic & Clinical Summary */}
+        <div className="grid grid-cols-2 gap-10 mb-10 page-break">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Acoustic Analysis</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-4 bg-slate-50 rounded border border-slate-100">
+                <span className="text-xs font-bold text-slate-500 uppercase">PCC Score</span>
+                <span className="text-xl font-bold text-slate-900">{aiResult?.pcc ? `${aiResult.pcc}%` : 'N/A'}</span>
+              </div>
+              <div className="p-4 bg-slate-50 rounded border border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Voice (GRBAS)</p>
+                <div className="flex justify-between">
+                  {Object.entries(grbasData).map(([key, val]) => (
+                    <div key={key} className="text-center">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">{key[0]}</p>
+                      <p className="text-base font-bold text-slate-900">{val}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Clinical Narrative</h3>
+            <div className="p-6 bg-slate-50 rounded border border-slate-100 h-full">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                The assessment reveals a <span className="font-bold text-slate-900">{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</span>. 
+                Primary deficit is observed in the <span className="font-bold text-slate-900">{lowestSubsystem.subject}</span> subsystem. 
+                Overall intelligibility is estimated at <span className="font-bold text-slate-900">{((Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 12) * 100).toFixed(0)}%</span>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Metrics Grid */}
+        <div className="mb-10 page-break">
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Detailed Subsystem Metrics</h3>
+          <div className="grid grid-cols-2 gap-6">
+            {Object.entries(fdaData).map(([subsystem, scores]) => (
+              <div key={subsystem} className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-900 uppercase">{subsystem}</span>
+                  <span className="text-[10px] font-bold text-slate-500">Mean: {(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length).toFixed(1)}</span>
+                </div>
+                <div className="p-4 space-y-2">
+                  {Object.entries(scores).map(([test, score]) => (
+                    <div key={test} className="flex justify-between text-[11px] border-b border-slate-50 pb-1">
+                      <span className="text-slate-500 capitalize">{test.replace(/([A-Z])/g, ' $1').trim()}</span>
+                      <span className="font-bold text-slate-900">{score}</span>
+                    </div>
+                  ))}
+                  {fdaObservations[subsystem] && (
+                    <div className="mt-3 pt-2 border-t border-slate-100">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Observations</p>
+                      <p className="text-[10px] text-slate-600 italic leading-tight">{fdaObservations[subsystem]}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Signature Section */}
+        <div className="mt-20 pt-10 border-t border-slate-200">
+          <div className="flex justify-between items-end">
+            <div className="w-1/3">
+              <div className="border-b border-slate-900 mb-2" />
+              <p className="text-sm font-bold text-slate-900">{clinicianName}</p>
+              <p className="text-[10px] text-slate-500">{clinicianCredentials}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase mt-4">Clinician Signature</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-slate-400 uppercase">VAKSIDDHI MOTOR SPEECH ASSESSMENT SUITE</p>
+              <p className="text-[9px] text-slate-300 italic mt-1">Standardized Clinical Output</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -4233,6 +4139,7 @@ export default function App() {
               FDA-2 Digital Assistant<br/>
               Clinical Assessment Tool
             </p>
+          </div>
           <div className="mt-4 pt-4 border-t border-slate-100">
             <button 
               onClick={handleShare}
@@ -4264,7 +4171,6 @@ export default function App() {
                 (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
               </p>
             </div>
-          </div>
           </div>
         </div>
       </aside>
