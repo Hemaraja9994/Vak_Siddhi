@@ -62,30 +62,37 @@
   }
 }
 
+.print-only {
+  display: none;
+}
+
 @media print {
-  body {
+  @page {
+    margin: 1cm;
+  }
+
+  html, body {
     background-color: white !important;
     color: black !important;
     overflow: visible !important;
-  }
-
-  /* Target the main layout container to ensure it doesn't restrict height during print */
-  div.flex.h-screen {
     height: auto !important;
-    overflow: visible !important;
-    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  aside, header, nav, button, .no-print, main {
+  .no-print {
     display: none !important;
   }
 
   .print-only {
     display: block !important;
     position: static !important;
-    left: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
     opacity: 1 !important;
-    z-index: 1 !important;
+    z-index: 9999 !important;
     pointer-events: auto !important;
     overflow: visible !important;
   }
@@ -99,14 +106,4 @@
     border: 1px solid #e2e8f0 !important;
     break-inside: avoid;
   }
-}
-
-.print-only {
-  position: fixed;
-  top: -9999px;
-  left: -9999px;
-  width: 100%;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
 }

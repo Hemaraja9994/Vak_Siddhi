@@ -40,7 +40,8 @@ import {
   Users,
   Calendar,
   PieChart as PieChartIcon,
-  Share2
+  Share2,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -62,6 +63,8 @@ import {
   Cell,
   Legend
 } from 'recharts';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 import { GoogleGenAI, Type as GenAIType } from "@google/genai";
 import { 
@@ -209,6 +212,70 @@ export default function App() {
   const [records, setRecords] = useState<PatientInfo[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPDF = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+
+    const element = reportRef.current;
+    if (!element) {
+      console.error('Report element not found');
+      setIsDownloading(false);
+      return;
+    }
+
+    // Capture original styles to restore later
+    const originalStyle = element.getAttribute('style') || '';
+    
+    try {
+      console.log('Starting PDF generation...');
+      
+      // Temporarily make it visible and styled for capture
+      element.style.display = 'block';
+      element.style.position = 'fixed';
+      element.style.top = '0';
+      element.style.left = '0';
+      element.style.width = '800px'; 
+      element.style.zIndex = '99999';
+      element.style.backgroundColor = 'white';
+      element.style.visibility = 'visible';
+      element.style.opacity = '1';
+      element.style.height = 'auto';
+      element.style.overflow = 'visible';
+      
+      // Wait for any charts/images/fonts to render completely
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+      const opt = {
+        margin: [10, 10, 10, 10] as [number, number, number, number],
+        filename: `VakSiddhi_Assessment_Report_${patientInfo.name || 'Patient'}_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: true,
+          letterRendering: true,
+          windowWidth: 800,
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      };
+
+      await html2pdf().from(element).set(opt).save();
+      console.log('PDF generated successfully');
+    } catch (error) {
+      console.error('PDF Generation Error:', error);
+      alert('Automatic download failed. Opening print dialog as fallback.');
+      window.print();
+    } finally {
+      // Restore original styles
+      element.setAttribute('style', originalStyle);
+      setIsDownloading(false);
+    }
+  };
 
   // Auth Listener
   React.useEffect(() => {
@@ -2184,10 +2251,16 @@ export default function App() {
               <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
             </div>
             <button 
-              onClick={handlePrint}
-              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3"
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Printer size={24} /> Print Report
+              {isDownloading ? (
+                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Printer size={24} />
+              )}
+              {isDownloading ? 'Generating PDF...' : 'Download Report'}
             </button>
           </div>
         </Card>
@@ -2850,38 +2923,57 @@ export default function App() {
                 <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
               </div>
               <button 
-                onClick={handlePrint}
-                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3"
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Printer size={24} /> Print Report
+                {isDownloading ? (
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Printer size={24} />
+                )}
+                {isDownloading ? 'Generating PDF...' : 'Download Report'}
               </button>
             </div>
           </Card>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 text-center flex flex-col items-center gap-4">
-          <button 
-            onClick={handleShare}
-            className={cn(
-              "px-6 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-              isCopied 
-                ? "bg-green-500 text-white shadow-lg shadow-green-100" 
-                : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100"
-            )}
-          >
-            {isCopied ? (
-              <>
-                <CheckCircle2 size={14} /> Link Copied!
-              </>
-            ) : (
-              <>
-                <Share2 size={14} /> Share App Link
-              </>
-            )}
-          </button>
-          <p className="text-[11px] text-slate-400 italic leading-relaxed">
-            Developed and designed by <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span>, (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
-          </p>
+        <div className="mt-12 pt-8 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-white rounded-2xl border border-slate-200">
+            <div className="flex-1">
+              <p className="text-[10px] text-slate-400 italic leading-relaxed mb-1">
+                Developed and designed by
+              </p>
+              <p className="text-sm text-slate-700 font-black">
+                Mr. Hemaraja Nayaka.S
+              </p>
+              <p className="text-[10px] text-slate-500 font-medium">
+                (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={handleShare}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg",
+                  isCopied 
+                    ? "bg-green-500 text-white shadow-green-200" 
+                    : "bg-slate-900 text-white hover:bg-slate-800 shadow-slate-200"
+                )}
+              >
+                {isCopied ? (
+                  <>
+                    <CheckCircle2 size={16} /> Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={16} /> Share App
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -3107,7 +3199,7 @@ export default function App() {
       </div>
 
       <div className="pt-8 border-t border-slate-200">
-        <Card className="bg-slate-900 text-white overflow-hidden relative">
+        <Card className="bg-slate-900 text-white overflow-hidden relative mb-6">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
@@ -3115,13 +3207,55 @@ export default function App() {
               <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
             </div>
             <button 
-              onClick={handlePrint}
-              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3"
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Printer size={24} /> Print Report
+              {isDownloading ? (
+                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Download size={24} />
+              )}
+              {isDownloading ? 'Generating Report...' : 'Download PDF Report'}
             </button>
           </div>
         </Card>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-white rounded-2xl border border-slate-200">
+          <div className="flex-1">
+            <p className="text-[10px] text-slate-400 italic leading-relaxed mb-1">
+              Developed and designed by
+            </p>
+            <p className="text-sm text-slate-700 font-black">
+              Mr. Hemaraja Nayaka.S
+            </p>
+            <p className="text-[10px] text-slate-500 font-medium">
+              (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={handleShare}
+              className={cn(
+                "flex items-center gap-2 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg",
+                isCopied 
+                  ? "bg-green-500 text-white shadow-green-200" 
+                  : "bg-slate-900 text-white hover:bg-slate-800 shadow-slate-200"
+              )}
+            >
+              {isCopied ? (
+                <>
+                  <CheckCircle2 size={16} /> Link Copied!
+                </>
+              ) : (
+                <>
+                  <Share2 size={16} /> Share App
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -3244,10 +3378,7 @@ export default function App() {
   );
 
   const handlePrint = () => {
-    // Small delay to ensure charts are fully rendered in the off-screen print-only container
-    setTimeout(() => {
-      window.print();
-    }, 500);
+    handleDownloadPDF();
   };
 
   const renderPrintReport = () => {
@@ -3290,7 +3421,7 @@ export default function App() {
     const diagnosis = getDiagnosis();
 
     return (
-      <div className="print-only p-8 bg-white text-slate-900 font-sans">
+      <div ref={reportRef} className="print-only p-8 bg-white text-slate-900 font-sans">
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
           <div>
@@ -3324,19 +3455,49 @@ export default function App() {
         </div>
 
         {/* Diagnosis Summary */}
-        <div className="mb-8">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Provisional Diagnosis & Severity</h3>
-          <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
-            <div className="flex items-center justify-between">
+        <div className="mb-8 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b-2 border-slate-900 pb-2 mb-4">Diagnostic Conclusion</h3>
+          <div className="p-8 bg-slate-50 rounded-2xl border-2 border-slate-200 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
-                <p className="text-2xl font-black text-slate-900">{diagnosis.type}</p>
-                <p className="text-sm font-bold text-indigo-600 uppercase tracking-widest mt-1">Severity: {diagnosis.severity}</p>
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">Provisional Diagnosis</p>
+                <h2 className="text-4xl font-black text-slate-900 leading-tight mb-2">{diagnosis.type}</h2>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-100 rounded-full text-xs font-black text-indigo-700 uppercase tracking-widest border border-indigo-200">
+                  <div className={cn(
+                    "w-2.5 h-2.5 rounded-full shadow-sm",
+                    diagnosis.severity === "Profound" ? "bg-red-500" :
+                    diagnosis.severity === "Severe" ? "bg-orange-500" :
+                    diagnosis.severity === "Moderate" ? "bg-amber-500" : "bg-green-500"
+                  )} />
+                  Severity: {diagnosis.severity}
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall FDA-2 Mean</p>
-                <p className="text-3xl font-black text-slate-900">{overallAverage.toFixed(1)}/4.0</p>
+              <div className="flex flex-col items-center md:items-end justify-center">
+                <div className="text-center md:text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Overall FDA-2 Mean</p>
+                  <div className="flex items-baseline gap-1 justify-center md:justify-end">
+                    <span className="text-6xl font-black text-slate-900 tracking-tighter">{overallAverage.toFixed(1)}</span>
+                    <span className="text-xl font-bold text-slate-400">/4.0</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-500 mt-2 italic">Based on Frenchay Dysarthria Assessment-2</p>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Clinical Summary */}
+        <div className="mb-8 page-break">
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Clinical Summary & Diagnostic Reasoning</h3>
+          <div className="p-6 bg-white border border-slate-200 rounded-xl leading-relaxed text-sm text-slate-700 space-y-4">
+            <p>
+              Comprehensive motor speech assessment reveals a <span className="font-bold text-slate-900">{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</span> profile. 
+              The assessment demonstrates significant involvement across multiple speech subsystems, with the primary physiological deficit observed in the <span className="font-bold text-slate-900">{radarData.sort((a, b) => a.A - b.A)[0].subject}</span> subsystem.
+            </p>
+            <p>
+              Functional communication is estimated at <span className="font-bold text-slate-900">{((Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 12) * 100).toFixed(0)}% intelligibility</span>. 
+              Voice quality analysis (GRBAS) and oro-motor examination findings correlate with the identified dysarthria type, suggesting a neurological basis for the observed speech patterns.
+            </p>
           </div>
         </div>
 
@@ -3631,23 +3792,59 @@ export default function App() {
                   </div>
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-200">Provisional Diagnosis</h4>
                 </div>
-                <div className="flex items-center gap-2">
-                  <select 
-                    value={manualDiagnosis}
-                    onChange={(e) => setManualDiagnosis(e.target.value)}
-                    className="bg-indigo-800/80 text-[10px] font-bold border border-indigo-700 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer min-w-[110px]"
-                  >
-                    <option value="">Auto-Detect Type</option>
-                    {DYSARTHRIA_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <select 
-                    value={manualSeverity}
-                    onChange={(e) => setManualSeverity(e.target.value)}
-                    className="bg-indigo-800/80 text-[10px] font-bold border border-indigo-700 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer min-w-[110px]"
-                  >
-                    <option value="">Auto-Detect Severity</option>
-                    {SEVERITY_LEVELS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                <div className="flex flex-col gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Dysarthria Type</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <button 
+                        onClick={() => setManualDiagnosis('')}
+                        className={cn(
+                          "px-2 py-1.5 rounded text-[9px] font-bold border transition-all",
+                          manualDiagnosis === '' ? "bg-indigo-500 border-indigo-400 text-white" : "bg-indigo-800/50 border-indigo-700 text-indigo-300 hover:bg-indigo-800"
+                        )}
+                      >
+                        Auto-Detect
+                      </button>
+                      {DYSARTHRIA_TYPES.map(t => (
+                        <button 
+                          key={t}
+                          onClick={() => setManualDiagnosis(t)}
+                          className={cn(
+                            "px-2 py-1.5 rounded text-[9px] font-bold border transition-all",
+                            manualDiagnosis === t ? "bg-indigo-500 border-indigo-400 text-white" : "bg-indigo-800/50 border-indigo-700 text-indigo-300 hover:bg-indigo-800"
+                          )}
+                        >
+                          {t.replace(' Dysarthria', '')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Severity Level</label>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                      <button 
+                        onClick={() => setManualSeverity('')}
+                        className={cn(
+                          "px-2 py-1.5 rounded text-[9px] font-bold border transition-all",
+                          manualSeverity === '' ? "bg-indigo-500 border-indigo-400 text-white" : "bg-indigo-800/50 border-indigo-700 text-indigo-300 hover:bg-indigo-800"
+                        )}
+                      >
+                        Auto-Detect
+                      </button>
+                      {SEVERITY_LEVELS.map(s => (
+                        <button 
+                          key={s}
+                          onClick={() => setManualSeverity(s)}
+                          className={cn(
+                            "px-2 py-1.5 rounded text-[9px] font-bold border transition-all",
+                            manualSeverity === s ? "bg-indigo-500 border-indigo-400 text-white" : "bg-indigo-800/50 border-indigo-700 text-indigo-300 hover:bg-indigo-800"
+                          )}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="text-3xl font-black tracking-tight">{diagnosis.type}</div>
@@ -3667,8 +3864,14 @@ export default function App() {
                 <span className="text-2xl font-black">{overallAverage.toFixed(1)}<span className="text-sm text-indigo-400">/4.0</span></span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-indigo-400 uppercase">Naturalness</span>
-                <div className="text-xl font-black">{naturalnessScore}/7</div>
+                <button 
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  className="px-4 py-2 bg-white text-indigo-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isDownloading ? <div className="w-3 h-3 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" /> : <Download size={14} />}
+                  {isDownloading ? 'Generating...' : 'Download PDF Report'}
+                </button>
               </div>
             </div>
           </Card>
@@ -3747,18 +3950,24 @@ export default function App() {
           </Card>
         </div>
 
-        <Card className="bg-slate-900 text-white overflow-hidden relative">
+        <Card className="bg-slate-900 text-white overflow-hidden relative mb-6">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-          <div className="relative flex items-center justify-between">
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-xl font-black tracking-tight">Generate Comprehensive Report</h3>
               <p className="text-slate-400 text-sm mt-1">Compile all assessment data, AI analysis, and clinical findings into a PDF.</p>
             </div>
             <button 
-              onClick={handlePrint}
-              className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/20 flex items-center gap-2"
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Printer size={20} /> Print Report
+              {isDownloading ? (
+                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Download size={24} />
+              )}
+              {isDownloading ? 'Generating Report...' : 'Download PDF Report'}
             </button>
           </div>
         </Card>
@@ -3768,7 +3977,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+      <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden no-print">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -3949,32 +4158,38 @@ export default function App() {
               FDA-2 Digital Assistant<br/>
               Clinical Assessment Tool
             </p>
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <button 
-                onClick={handleShare}
-                className={cn(
-                  "w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all mb-4",
-                  isCopied 
-                    ? "bg-green-500 text-white shadow-lg shadow-green-100" 
-                    : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100"
-                )}
-              >
-                {isCopied ? (
-                  <>
-                    <CheckCircle2 size={12} /> Link Copied!
-                  </>
-                ) : (
-                  <>
-                    <Share2 size={12} /> Share App
-                  </>
-                )}
-              </button>
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <button 
+              onClick={handleShare}
+              className={cn(
+                "w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mb-4 shadow-sm",
+                isCopied 
+                  ? "bg-green-500 text-white shadow-green-100" 
+                  : "bg-slate-900 text-white hover:bg-slate-800 shadow-slate-200"
+              )}
+            >
+              {isCopied ? (
+                <>
+                  <CheckCircle2 size={12} /> Link Copied!
+                </>
+              ) : (
+                <>
+                  <Share2 size={12} /> Share App
+                </>
+              )}
+            </button>
+            <div className="space-y-1">
               <p className="text-[9px] text-slate-400 text-center leading-relaxed italic">
-                Developed and designed by<br/>
-                <span className="text-slate-600 font-bold not-italic">Mr. Hemaraja Nayaka.S</span><br/>
-                <span className="text-[8px]">(M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)</span>
+                Developed and designed by
+              </p>
+              <p className="text-[10px] text-slate-700 font-black text-center leading-none">
+                Mr. Hemaraja Nayaka.S
+              </p>
+              <p className="text-[8px] text-slate-500 text-center leading-tight">
+                (M.Sc SLP, PGDBEME, DHA&ET- Associate Professor in Speech Language Pathology)
               </p>
             </div>
+          </div>
           </div>
         </div>
       </aside>
@@ -4013,12 +4228,20 @@ export default function App() {
               <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save Session'}</span>
             </button>
             <button 
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm font-bold text-xs lg:text-sm"
-              title="Print Report"
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className={cn(
+                "flex items-center gap-2 px-3 lg:px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm font-bold text-xs lg:text-sm",
+                isDownloading && "opacity-50 cursor-not-allowed"
+              )}
+              title="Download PDF Report"
             >
-              <Printer size={16} className="lg:w-[18px] lg:h-[18px]" />
-              <span className="hidden sm:inline">Print Report</span>
+              {isDownloading ? (
+                <div className="w-4 h-4 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin" />
+              ) : (
+                <Printer size={16} className="lg:w-[18px] lg:h-[18px]" />
+              )}
+              <span className="hidden sm:inline">{isDownloading ? 'Generating PDF...' : 'Download Report'}</span>
             </button>
           </div>
         </header>
@@ -4138,8 +4361,8 @@ export default function App() {
           </AnimatePresence>
         </div>
       </main>
-      {renderPrintReport()}
     </div>
+    {renderPrintReport()}
     </ErrorBoundary>
   );
 }
