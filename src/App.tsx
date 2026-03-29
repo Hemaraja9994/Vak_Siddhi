@@ -256,6 +256,7 @@ export default function App() {
       element.style.opacity = '1';
       element.style.overflow = 'visible';
       element.style.pointerEvents = 'none'; // Prevent interaction during capture
+      element.style.paddingTop = '40px'; // Add extra padding for PDF margin
       
       // Wait for any charts/images/fonts to render completely
       await new Promise(resolve => setTimeout(resolve, 8000)); // Increased wait time
@@ -3346,7 +3347,6 @@ export default function App() {
       </div>
     </div>
   );
-};
 
   const renderSettings = () => (
     <div className="space-y-8">
@@ -3767,193 +3767,274 @@ export default function App() {
     const diagnosis = getDiagnosis();
 
     return (
-      <div id="print-report-container" ref={reportRef} className="print-only bg-white p-12 font-sans text-slate-900" style={{ width: '1000px', margin: '0 auto' }}>
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-10 border-b-2 border-slate-900 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-slate-900 rounded text-white">
-              <Volume2 size={32} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">VAKSIDDHI MOTOR SPEECH ASSESSMENT SUITE</h1>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Clinical Diagnostic Report</p>
-            </div>
+        <div id="print-report-container" ref={reportRef} className="print-only bg-white pt-20 pb-12 px-12 font-sans text-slate-900 relative overflow-hidden" style={{ width: '1000px', margin: '0 auto' }}>
+          {/* Subtle Background Pattern */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+          
+          {/* Confidential Tag */}
+          <div className="absolute top-8 right-12">
+            <span className="px-3 py-1 border-2 border-red-100 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-full">Confidential Medical Record</span>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-bold text-slate-900">Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest">FDA-2 Standardized Protocol</p>
-          </div>
-        </div>
 
-        {/* Patient & Clinician Info */}
-        <div className="grid grid-cols-2 gap-10 mb-10">
-          <div className="border border-slate-200 p-6 rounded-lg">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Patient Details</h3>
-            <table className="w-full text-sm">
-              <tbody>
-                <tr>
-                  <td className="py-1 font-semibold text-slate-500 w-1/3">Name:</td>
-                  <td className="py-1 font-bold text-slate-900">{patientInfo.name || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td className="py-1 font-semibold text-slate-500">Age/Gender:</td>
-                  <td className="py-1 font-bold text-slate-900">{patientInfo.age || 'N/A'}Y / {patientInfo.gender || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td className="py-1 font-semibold text-slate-500">Patient ID:</td>
-                  <td className="py-1 font-mono text-slate-600">{patientInfo.id || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td className="py-1 font-semibold text-slate-500">Date of Birth:</td>
-                  <td className="py-1 font-bold text-slate-900">{patientInfo.dob || 'N/A'}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="border border-slate-200 p-6 rounded-lg">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Clinician Details</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase">Assessing Clinician</p>
-                <p className="text-base font-bold text-slate-900">{clinicianName}</p>
+          {/* Header Section */}
+          <div className="flex justify-between items-end mb-12 border-b-4 border-slate-900 pb-8 relative z-10">
+            <div className="flex items-center gap-6">
+              <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-slate-200 transform -rotate-3">
+                <Volume2 size={48} />
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase">Qualifications</p>
-                <p className="text-xs text-slate-600 leading-relaxed">{clinicianCredentials}</p>
+                <h1 className="text-3xl font-black tracking-tighter text-slate-900 leading-none mb-2">VAKSIDDHI</h1>
+                <p className="text-sm font-bold text-indigo-600 uppercase tracking-[0.3em]">Motor Speech Assessment Suite</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Standardized Clinical Diagnostic Protocol (FDA-2)</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="mb-4">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Report Generated On</p>
+                <p className="text-lg font-black text-slate-900">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Verified Digital Output</p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Summary Findings */}
-        <div className="bg-slate-50 p-8 rounded-lg border border-slate-200 mb-10">
-          <div className="grid grid-cols-3 gap-8">
-            <div className="col-span-2">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Provisional Diagnosis</p>
-              <h2 className="text-3xl font-bold text-slate-900">{diagnosis.type}</h2>
-              <p className="text-sm font-semibold text-slate-600 mt-1">Severity: <span className="text-slate-900">{diagnosis.severity}</span></p>
+          {/* Patient & Clinician Info */}
+          <div className="grid grid-cols-2 gap-12 mb-12 relative z-10">
+            <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-200 pb-3">
+                <UserIcon size={16} className="text-indigo-600" />
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Patient Demographics</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-y-4 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Full Name</span>
+                  <span className="font-black text-slate-900">{patientInfo.name || 'N/A'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Age / Gender</span>
+                  <span className="font-black text-slate-900">{patientInfo.age || 'N/A'}Y / {patientInfo.gender || 'N/A'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Patient ID</span>
+                  <span className="font-black text-slate-900">{patientInfo.id || 'N/A'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Date of Birth</span>
+                  <span className="font-black text-slate-900">{patientInfo.dob || 'N/A'}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-right border-l border-slate-200 pl-8">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">FDA-2 Mean Score</p>
-              <div className="flex items-baseline justify-end gap-1">
-                <span className="text-5xl font-bold text-slate-900">{overallAverage.toFixed(1)}</span>
-                <span className="text-xl text-slate-400">/ 4.0</span>
+            
+            <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-200 pb-3">
+                <Activity size={16} className="text-indigo-600" />
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Clinical Context</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Clinician</span>
+                  <span className="font-black text-slate-900">{clinicianName}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Qualifications</span>
+                  <span className="text-[9px] font-medium text-slate-500 leading-tight">{clinicianCredentials}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Radar Subsystem Profile */}
-        <div className="mb-10 page-break">
-          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Subsystem Analysis Profile</h3>
-          <div className="flex flex-col items-center bg-white border border-slate-200 rounded-lg p-8">
-            <div className="w-full h-[450px] flex justify-center items-center">
-              <RadarChart width={600} height={400} cx={300} cy={200} outerRadius={160} data={radarData}>
-                <PolarGrid stroke="#e2e8f0" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fontWeight: 700, fill: '#475569' }} />
-                <PolarRadiusAxis angle={30} domain={[0, 4]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                <Radar
-                  name="Patient"
-                  dataKey="A"
-                  stroke="#1e293b"
-                  strokeWidth={2}
-                  fill="#1e293b"
-                  fillOpacity={0.15}
-                  isAnimationActive={false}
-                />
-              </RadarChart>
+          {/* Diagnosis Summary */}
+          <div className="mb-12 page-break relative z-10">
+            <div className="bg-slate-900 text-white p-10 rounded-[40px] shadow-2xl shadow-slate-200 flex items-center justify-between overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
+              <div className="relative z-10">
+                <p className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.4em] mb-4">Provisional Diagnostic Impression</p>
+                <h2 className="text-5xl font-black tracking-tighter mb-2">{diagnosis.type}</h2>
+                <div className="flex items-center gap-4">
+                  <span className="px-4 py-1.5 bg-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-full">{diagnosis.severity} Severity</span>
+                  <div className="h-1 w-12 bg-indigo-500/30 rounded-full"></div>
+                  <span className="text-indigo-200 text-xs font-bold italic">Based on FDA-2 Standardized Scoring</span>
+                </div>
+              </div>
+              <div className="text-right relative z-10">
+                <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-2">FDA-2 Mean Score</p>
+                <div className="text-7xl font-black tracking-tighter leading-none">
+                  {overallAverage.toFixed(2)}
+                  <span className="text-2xl text-indigo-400 ml-2">/ 4.0</span>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-4 gap-4 w-full mt-6">
-              {radarData.map(d => (
-                <div key={d.subject} className="p-3 bg-slate-50 rounded border border-slate-100 text-center">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{d.subject}</p>
-                  <p className="text-lg font-bold text-slate-900">{d.A.toFixed(1)}</p>
+          </div>
+
+          {/* Radar Subsystem Profile */}
+          <div className="mb-12 page-break relative z-10">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <LayoutDashboard size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight">Subsystem Analysis Profile</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Visual representation of motor speech integrity</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-12 gap-8 items-center bg-white border border-slate-100 rounded-[32px] p-10 shadow-sm">
+              <div className="col-span-7 flex justify-center items-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-indigo-50 rounded-full blur-3xl opacity-30"></div>
+                  <RadarChart width={550} height={450} cx={275} cy={225} outerRadius={160} data={radarData}>
+                    <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 800, fill: '#64748b', textAnchor: 'middle' }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 4]} tick={{ fontSize: 9, fill: '#94a3b8' }} />
+                    <Radar
+                      name="Patient"
+                      dataKey="A"
+                      stroke="#4f46e5"
+                      strokeWidth={3}
+                      fill="#4f46e5"
+                      fillOpacity={0.2}
+                      isAnimationActive={false}
+                    />
+                  </RadarChart>
+                </div>
+              </div>
+              <div className="col-span-5 space-y-3">
+                {radarData.map((d, idx) => (
+                  <div key={d.subject} className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:shadow-md group">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-400 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-colors">
+                        {idx + 1}
+                      </span>
+                      <span className="text-[11px] font-black text-slate-600 uppercase tracking-wider">{d.subject}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(d.A / 4) * 100}%` }}></div>
+                      </div>
+                      <span className="text-sm font-black text-slate-900 w-8 text-right">{d.A.toFixed(1)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Acoustic & Clinical Summary */}
+          <div className="grid grid-cols-2 gap-12 mb-12 page-break relative z-10">
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                  <Mic2 size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">Acoustic Analysis</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Objective speech metrics</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-6 bg-indigo-50 rounded-3xl border border-indigo-100 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-600/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110"></div>
+                  <div className="relative z-10">
+                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">PCC Score</p>
+                    <p className="text-xs text-indigo-600 font-bold">Percentage of Consonants Correct</p>
+                  </div>
+                  <div className="text-4xl font-black text-indigo-600 relative z-10">
+                    {aiResult?.pcc ? `${aiResult.pcc}%` : 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="p-8 bg-slate-50 rounded-[32px] border border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                    Voice Quality (GRBAS Scale)
+                  </p>
+                  <div className="grid grid-cols-5 gap-4">
+                    {Object.entries(grbasData).map(([key, val]) => (
+                      <div key={key} className="text-center p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                        <p className="text-[10px] font-black text-slate-400 uppercase mb-2">{key[0]}</p>
+                        <p className="text-xl font-black text-slate-900">{val}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                  <ClipboardCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">Clinical Narrative</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Qualitative assessment summary</p>
+                </div>
+              </div>
+              
+              <div className="p-8 bg-slate-50 rounded-[32px] border border-slate-100 h-[320px] relative">
+                <div className="absolute top-6 right-8 opacity-10">
+                  <Quote size={40} className="text-indigo-600" />
+                </div>
+                <div className="text-xs font-medium text-slate-600 leading-relaxed overflow-y-auto h-full pr-4 scrollbar-hide">
+                  The assessment reveals a <span className="font-bold text-slate-900">{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</span>. 
+                  Primary deficit is observed in the <span className="font-bold text-slate-900">{lowestSubsystem.subject}</span> subsystem. 
+                  Overall intelligibility is estimated at <span className="font-bold text-slate-900">{((Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 12) * 100).toFixed(0)}%</span>.
+                  {fdaObservations.intelligibility && `\n\nAdditional Observations: ${fdaObservations.intelligibility}`}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Metrics Grid */}
+          <div className="mb-12 page-break relative z-10">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Detailed Subsystem Metrics</h3>
+            <div className="grid grid-cols-2 gap-6">
+              {Object.entries(fdaData).map(([subsystem, scores]) => (
+                <div key={subsystem} className="border border-slate-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
+                  <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">{subsystem}</span>
+                    <span className="text-[10px] font-black text-indigo-400">MEAN: {(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length).toFixed(1)}</span>
+                  </div>
+                  <div className="p-6 space-y-2">
+                    {Object.entries(scores).map(([test, score]) => (
+                      <div key={test} className="flex justify-between text-[11px] border-b border-slate-50 pb-2">
+                        <span className="text-slate-500 font-medium capitalize">{test.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        <span className="font-black text-slate-900">{score}</span>
+                      </div>
+                    ))}
+                    {fdaObservations[subsystem] && (
+                      <div className="mt-4 pt-3 border-t border-slate-100">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Clinical Notes</p>
+                        <p className="text-[10px] text-slate-600 italic leading-relaxed">{fdaObservations[subsystem]}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
 
-        {/* Acoustic & Clinical Summary */}
-        <div className="grid grid-cols-2 gap-10 mb-10 page-break">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Acoustic Analysis</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-slate-50 rounded border border-slate-100">
-                <span className="text-xs font-bold text-slate-500 uppercase">PCC Score</span>
-                <span className="text-xl font-bold text-slate-900">{aiResult?.pcc ? `${aiResult.pcc}%` : 'N/A'}</span>
-              </div>
-              <div className="p-4 bg-slate-50 rounded border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Voice (GRBAS)</p>
-                <div className="flex justify-between">
-                  {Object.entries(grbasData).map(([key, val]) => (
-                    <div key={key} className="text-center">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase">{key[0]}</p>
-                      <p className="text-base font-bold text-slate-900">{val}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          {/* Footer Section */}
+          <div className="mt-20 pt-10 border-t border-slate-100 flex justify-between items-start relative z-10">
+            <div className="max-w-xs">
+              <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-2">Clinician Signature</p>
+              <div className="h-16 border-b border-slate-200 mb-2"></div>
+              <p className="text-[10px] font-bold text-slate-500 italic">Digitally signed on {new Date().toLocaleDateString()}</p>
+              <p className="text-[11px] font-black text-slate-900 mt-2">{clinicianName}</p>
             </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Clinical Narrative</h3>
-            <div className="p-6 bg-slate-50 rounded border border-slate-100 h-full">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                The assessment reveals a <span className="font-bold text-slate-900">{diagnosis.severity.toLowerCase()} {diagnosis.type.toLowerCase()}</span>. 
-                Primary deficit is observed in the <span className="font-bold text-slate-900">{lowestSubsystem.subject}</span> subsystem. 
-                Overall intelligibility is estimated at <span className="font-bold text-slate-900">{((Object.values(fdaData.intelligibility).reduce((a, b) => a + b, 0) / 12) * 100).toFixed(0)}%</span>.
+            <div className="text-right">
+              <p className="text-[9px] text-slate-400 font-medium leading-relaxed">
+                This report is generated by the Vaksiddhi Digital Assessment Suite.<br/>
+                Intended for clinical use by qualified Speech-Language Pathologists.<br/>
+                © 2026 Vaksiddhi Clinical Technologies.
               </p>
             </div>
           </div>
         </div>
-
-        {/* Detailed Metrics Grid */}
-        <div className="mb-10 page-break">
-          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 border-l-4 border-slate-900 pl-4">Detailed Subsystem Metrics</h3>
-          <div className="grid grid-cols-2 gap-6">
-            {Object.entries(fdaData).map(([subsystem, scores]) => (
-              <div key={subsystem} className="border border-slate-200 rounded-lg overflow-hidden">
-                <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-900 uppercase">{subsystem}</span>
-                  <span className="text-[10px] font-bold text-slate-500">Mean: {(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length).toFixed(1)}</span>
-                </div>
-                <div className="p-4 space-y-2">
-                  {Object.entries(scores).map(([test, score]) => (
-                    <div key={test} className="flex justify-between text-[11px] border-b border-slate-50 pb-1">
-                      <span className="text-slate-500 capitalize">{test.replace(/([A-Z])/g, ' $1').trim()}</span>
-                      <span className="font-bold text-slate-900">{score}</span>
-                    </div>
-                  ))}
-                  {fdaObservations[subsystem] && (
-                    <div className="mt-3 pt-2 border-t border-slate-100">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Observations</p>
-                      <p className="text-[10px] text-slate-600 italic leading-tight">{fdaObservations[subsystem]}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Signature Section */}
-        <div className="mt-20 pt-10 border-t border-slate-200">
-          <div className="flex justify-between items-end">
-            <div className="w-1/3">
-              <div className="border-b border-slate-900 mb-2" />
-              <p className="text-sm font-bold text-slate-900">{clinicianName}</p>
-              <p className="text-[10px] text-slate-500">{clinicianCredentials}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase mt-4">Clinician Signature</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold text-slate-400 uppercase">VAKSIDDHI MOTOR SPEECH ASSESSMENT SUITE</p>
-              <p className="text-[9px] text-slate-300 italic mt-1">Standardized Clinical Output</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+      );
   };
 
   return (
@@ -3980,14 +4061,23 @@ export default function App() {
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative p-2.5 bg-indigo-600 rounded-xl text-white shadow-xl shadow-indigo-200 flex items-center justify-center transform transition-transform duration-500 hover:rotate-12">
-                <Volume2 size={28} />
+              <div className="absolute -inset-1.5 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-400 rounded-2xl blur-md opacity-20 group-hover:opacity-40 transition duration-500"></div>
+              <div className="relative w-12 h-12 bg-white rounded-2xl shadow-xl shadow-indigo-100/50 flex items-center justify-center border border-slate-100 overflow-hidden transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent opacity-50"></div>
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute w-8 h-8 bg-indigo-600/10 rounded-full animate-pulse"></div>
+                  <Volume2 size={24} className="text-indigo-600 relative z-10" />
+                </div>
               </div>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tighter text-slate-900 leading-none">VakSiddhi</h1>
-              <p className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.2em] mt-1">Assessment Suite</p>
+              <h1 className="text-2xl font-black tracking-tighter text-slate-900 leading-none flex items-baseline">
+                Vak<span className="text-indigo-600">Siddhi</span>
+              </h1>
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.25em] mt-1.5 flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-indigo-500"></span>
+                Clinical Suite
+              </p>
             </div>
           </div>
           <button 
