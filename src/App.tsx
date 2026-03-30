@@ -1996,9 +1996,9 @@ export default function App() {
           </div>
           <div className="aspect-video bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group">
             <img 
-              src={stimulusImage === 'cookie' ? "https://picsum.photos/seed/cookie-theft-clinical/800/450" : "https://picsum.photos/seed/park-scene-clinical/800/450"} 
+              src={stimulusImage === 'cookie' ? "https://www.mghihp.edu/sites/default/files/inline-images/Cookie%20Theft%20Picture.jpg" : "https://www.researchgate.net/profile/Annette-Baumgaertner/publication/232479524/figure/fig1/AS:299988585435136@1448534064564/The-Park-Scene-from-the-Western-Aphasia-Battery-Kertesz-1982.png"} 
               alt={`${stimulusImage} Stimulus`} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain bg-white"
               referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
